@@ -10,30 +10,49 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const canvas = document.getElementById("heroCanvas");
   const ctx = canvas ? canvas.getContext("2d", { alpha: false }) : null;
+  const stickyWrapper = document.getElementById("stickyWrapper");
+  const scrollTrack = document.getElementById("scrollTrack");
   const cueProgress = document.getElementById("cueProgress");
   const steps = Array.from(document.querySelectorAll(".story-step"));
   const navLinks = Array.from(document.querySelectorAll("[data-step-nav]"));
-
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  const images = new Array(TOTAL_FRAMES);
-  let targetProgress = 0;
-  let currentProgress = 0;
+  const frameCache = new Map();
+  const activeLoads = new Map();
+  let loadQueue = [];
+  let queuedFrames = new Set();
+  let wantedFrames = new Set();
+  let desiredFrame = 0;
   let lastDrawnFrame = -1;
   let currentStepIndex = -1;
-  let rafId = 0;
+  let scrollDirection = 1;
+  let renderRafId = 0;
+  let useCounter = 0;
+  let destroyed = false;
+  let forceNextRedraw = true;
 
-  // Make absolutely sure the document itself remains scrollable in Lovable,
-  // mobile Safari, Chrome and embedded preview contexts.
+  // Keep native scrolling as the only source of movement. Nothing here calls
+  // preventDefault(), so mouse wheel, touchpad and touch remain browser-native.
   document.documentElement.style.overflowX = "hidden";
   document.documentElement.style.overflowY = "auto";
   document.documentElement.style.height = "auto";
+  document.documentElement.style.touchAction = "pan-y";
   document.body.style.overflowX = "hidden";
   document.body.style.overflowY = "auto";
   document.body.style.height = "auto";
   document.body.style.minHeight = "100%";
-  document.documentElement.style.touchAction = "pan-y";
   document.body.style.touchAction = "pan-y";
+
+  // Windows/macOS reduced-motion should simplify text transitions, not disable
+  // the scroll-controlled image sequence. Inline styles override the old CSS
+  // fallback that shortened the track and turned the fixed canvas into sticky.
+  if (prefersReducedMotion) {
+    if (scrollTrack) scrollTrack.style.height = "220vh";
+    if (stickyWrapper) {
+      stickyWrapper.style.position = "fixed";
+      stickyWrapper.style.height = "100svh";
+    }
+  }
 
   function splitTextIntoChars(element) {
     if (!element || element.dataset.splitDone) return;
@@ -53,20 +72,23 @@ document.addEventListener("DOMContentLoaded", () => {
           if (!word) return;
           if (/^\s+$/.test(word)) {
             fragment.appendChild(document.createTextNode(" "));
-          } else {
-            const wordSpan = document.createElement("span");
-            wordSpan.className = "word";
-
-            for (const char of word) {
-              const charSpan = document.createElement("span");
-              charSpan.className = "char";
-              charSpan.style.setProperty("--char-i", globalCharIndex++);
-              charSpan.textContent = char;
-              wordSpan.appendChild(charSpan);
-            }
-            fragment.appendChild(wordSpan);
+            return;
           }
+
+          const wordSpan = document.createElement("span");
+          wordSpan.className = "word";
+
+          for (const char of word) {
+            const charSpan = document.createElement("span");
+            charSpan.className = "char";
+            charSpan.style.setProperty("--char-i", globalCharIndex++);
+            charSpan.textContent = char;
+            wordSpan.appendChild(charSpan);
+          }
+
+          fragment.appendChild(wordSpan);
         });
+
         return fragment;
       }
 
@@ -104,8 +126,31 @@ document.addEventListener("DOMContentLoaded", () => {
     return `${FRAMES_DIR}${FRAME_PREFIX}${padIndex}${FRAME_EXT}`;
   }
 
-  function drawFrame(img) {
-    if (!ctx || !canvas || !img || !img.complete || img.naturalWidth === 0) return;
+  function getLoaderConfig() {
+    const isMobile = window.innerWidth <= 760;
+    return {
+      radius: isMobile ? 3 : 6,
+      cacheLimit: isMobile ? 10 : 20,
+      concurrency: isMobile ? 3 : 5,
+    };
+  }
+
+  function isLoadedEntry(entry) {
+    return Boolean(
+      entry &&
+        entry.state === "loaded" &&
+        entry.img &&
+        entry.img.complete &&
+        entry.img.naturalWidth > 0,
+    );
+  }
+
+  function touchEntry(entry) {
+    if (entry) entry.lastUsed = ++useCounter;
+  }
+
+  function drawFrame(index, img) {
+    if (!ctx || !canvas || !img || !img.complete || img.naturalWidth === 0) return false;
 
     const w = canvas.width;
     const h = canvas.height;
@@ -115,104 +160,252 @@ document.addEventListener("DOMContentLoaded", () => {
     const drawW = imgW * scale;
     const drawH = imgH * scale;
     const isMobile = window.innerWidth <= 760;
+
+    // Preserve the composition used by the original art direction while
+    // keeping the butterfly/subject visible on narrow screens.
     const offsetX = isMobile ? (w - drawW) * 0.75 : (w - drawW) * 0.95;
     const offsetY = (h - drawH) * 0.5;
 
     ctx.fillStyle = "#F7F3EA";
     ctx.fillRect(0, 0, w, h);
     ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
+    lastDrawnFrame = index;
+    return true;
   }
 
-  function findClosestLoadedImage(index) {
-    if (images[index] && images[index].complete && images[index].naturalWidth > 0) {
-      return images[index];
+  function findClosestLoadedFrame(index) {
+    const exact = frameCache.get(index);
+    if (isLoadedEntry(exact)) {
+      return { index, entry: exact };
     }
 
-    for (let offset = 1; offset < TOTAL_FRAMES; offset++) {
-      const prev = index - offset;
-      if (
-        prev >= 0 &&
-        images[prev] &&
-        images[prev].complete &&
-        images[prev].naturalWidth > 0
-      ) {
-        return images[prev];
+    for (let offset = 1; offset < TOTAL_FRAMES; offset += 1) {
+      const first = index + offset * scrollDirection;
+      if (first >= 0 && first < TOTAL_FRAMES) {
+        const entry = frameCache.get(first);
+        if (isLoadedEntry(entry)) return { index: first, entry };
       }
 
-      const next = index + offset;
-      if (
-        next < TOTAL_FRAMES &&
-        images[next] &&
-        images[next].complete &&
-        images[next].naturalWidth > 0
-      ) {
-        return images[next];
+      const second = index - offset * scrollDirection;
+      if (second >= 0 && second < TOTAL_FRAMES) {
+        const entry = frameCache.get(second);
+        if (isLoadedEntry(entry)) return { index: second, entry };
       }
     }
 
     return null;
   }
 
+  function renderDesiredFrame(force = false) {
+    const match = findClosestLoadedFrame(desiredFrame);
+    if (!match) return;
+
+    touchEntry(match.entry);
+    if (!force && !forceNextRedraw && match.index === lastDrawnFrame) return;
+
+    if (drawFrame(match.index, match.entry.img)) {
+      forceNextRedraw = false;
+    }
+  }
+
+  function scheduleCanvasRender(force = false) {
+    if (destroyed) return;
+    if (force) forceNextRedraw = true;
+    if (renderRafId) return;
+
+    renderRafId = requestAnimationFrame(() => {
+      renderRafId = 0;
+      renderDesiredFrame(forceNextRedraw);
+    });
+  }
+
   function resizeCanvas() {
     if (!canvas) return;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = Math.round(window.innerWidth * dpr);
-    canvas.height = Math.round(window.innerHeight * dpr);
 
-    if (lastDrawnFrame >= 0) {
-      const img = findClosestLoadedImage(lastDrawnFrame);
-      if (img) drawFrame(img);
+    const isMobile = window.innerWidth <= 760;
+    const dprCap = isMobile ? 1.5 : 2;
+    const dpr = Math.min(window.devicePixelRatio || 1, dprCap);
+    const cssWidth = Math.max(1, window.innerWidth);
+    const cssHeight = Math.max(1, window.innerHeight);
+    const nextWidth = Math.round(cssWidth * dpr);
+    const nextHeight = Math.round(cssHeight * dpr);
+
+    if (canvas.width !== nextWidth || canvas.height !== nextHeight) {
+      canvas.width = nextWidth;
+      canvas.height = nextHeight;
+      forceNextRedraw = true;
+    }
+
+    scheduleCanvasRender(true);
+  }
+
+  function cancelLoad(index) {
+    const img = activeLoads.get(index);
+    if (!img) return;
+
+    img.onload = null;
+    img.onerror = null;
+    try {
+      img.removeAttribute("src");
+    } catch {
+      // Some embedded browsers do not allow removing an in-flight source.
+    }
+
+    activeLoads.delete(index);
+    const entry = frameCache.get(index);
+    if (entry && entry.state === "loading") {
+      frameCache.delete(index);
     }
   }
 
-  function loadFrame(index) {
-    if (images[index]) return images[index];
+  function disposeEntry(index) {
+    const entry = frameCache.get(index);
+    if (!entry || entry.state === "loading") return;
 
-    const img = new Image();
-    images[index] = img;
-    img.decoding = "async";
-    img.src = getFramePath(index);
-    img.onload = () => {
-      if (index === 0 && lastDrawnFrame < 0) {
-        resizeCanvas();
-        drawFrame(img);
-        lastDrawnFrame = 0;
+    if (entry.img) {
+      entry.img.onload = null;
+      entry.img.onerror = null;
+      try {
+        entry.img.removeAttribute("src");
+      } catch {
+        // Safe no-op for older WebViews.
       }
-    };
-    img.onerror = () => {
-      console.error(`Falha ao carregar frame ${index}: ${img.src}`);
-    };
-
-    return img;
-  }
-
-  function preloadFrames() {
-    loadFrame(0);
-
-    for (let i = 10; i < TOTAL_FRAMES; i += 10) {
-      loadFrame(i);
     }
 
-    // Stagger loading so the browser can paint and remain responsive.
-    let nextIndex = 1;
-    const loadBatch = () => {
-      let loaded = 0;
-      while (nextIndex < TOTAL_FRAMES && loaded < 12) {
-        if (nextIndex % 10 !== 0) loadFrame(nextIndex);
-        nextIndex += 1;
-        loaded += 1;
-      }
+    frameCache.delete(index);
+  }
 
-      if (nextIndex < TOTAL_FRAMES) {
-        if ("requestIdleCallback" in window) {
-          window.requestIdleCallback(loadBatch, { timeout: 500 });
-        } else {
-          setTimeout(loadBatch, 40);
+  function trimCache() {
+    const { cacheLimit } = getLoaderConfig();
+    const loadedEntries = Array.from(frameCache.entries()).filter(([, entry]) =>
+      isLoadedEntry(entry),
+    );
+
+    if (loadedEntries.length <= cacheLimit) return;
+
+    const removable = loadedEntries
+      .filter(([index]) => !wantedFrames.has(index) && index !== desiredFrame)
+      .sort((a, b) => a[1].lastUsed - b[1].lastUsed);
+
+    let loadedCount = loadedEntries.length;
+    for (const [index] of removable) {
+      if (loadedCount <= cacheLimit) break;
+      disposeEntry(index);
+      loadedCount -= 1;
+    }
+  }
+
+  function pumpLoadQueue() {
+    if (destroyed) return;
+
+    const { concurrency } = getLoaderConfig();
+
+    while (activeLoads.size < concurrency && loadQueue.length > 0) {
+      const index = loadQueue.shift();
+      queuedFrames.delete(index);
+
+      if (!wantedFrames.has(index)) continue;
+
+      const existing = frameCache.get(index);
+      if (isLoadedEntry(existing) || (existing && existing.state === "loading")) continue;
+      if (existing && existing.state === "error") frameCache.delete(index);
+
+      const img = new Image();
+      const entry = {
+        img,
+        state: "loading",
+        lastUsed: ++useCounter,
+      };
+
+      frameCache.set(index, entry);
+      activeLoads.set(index, img);
+      img.decoding = "async";
+
+      img.onload = () => {
+        if (destroyed) return;
+
+        activeLoads.delete(index);
+        const currentEntry = frameCache.get(index);
+        if (!currentEntry || currentEntry.img !== img) {
+          pumpLoadQueue();
+          return;
         }
-      }
-    };
 
-    loadBatch();
+        currentEntry.state = "loaded";
+        touchEntry(currentEntry);
+
+        // Critical: if the exact frame finishes after a fallback was painted,
+        // redraw it immediately. Never mark an unloaded target as displayed.
+        if (index === desiredFrame || lastDrawnFrame < 0) {
+          scheduleCanvasRender(true);
+        }
+
+        trimCache();
+        pumpLoadQueue();
+      };
+
+      img.onerror = () => {
+        if (destroyed) return;
+
+        activeLoads.delete(index);
+        const currentEntry = frameCache.get(index);
+        if (currentEntry && currentEntry.img === img) {
+          currentEntry.state = "error";
+        }
+        console.error(`Falha ao carregar frame ${index}: ${getFramePath(index)}`);
+        pumpLoadQueue();
+      };
+
+      img.src = getFramePath(index);
+    }
+  }
+
+  function buildPriorityOrder(center, radius) {
+    const order = [center];
+
+    for (let distance = 1; distance <= radius; distance += 1) {
+      const ahead = center + distance * scrollDirection;
+      const behind = center - distance * scrollDirection;
+
+      if (ahead >= 0 && ahead < TOTAL_FRAMES) order.push(ahead);
+      if (behind >= 0 && behind < TOTAL_FRAMES) order.push(behind);
+    }
+
+    return order;
+  }
+
+  function updateLoadWindow(center) {
+    const { radius } = getLoaderConfig();
+    const priorityOrder = buildPriorityOrder(center, radius);
+    const nextWantedFrames = new Set(priorityOrder);
+    wantedFrames = nextWantedFrames;
+
+    // Cancel obsolete queued work. The queue is rebuilt below in the new
+    // priority order, guaranteeing that the exact requested frame is first.
+    loadQueue = [];
+    queuedFrames.clear();
+
+    // Cancel obsolete in-flight requests so the new exact frame gets a free
+    // connection immediately instead of waiting behind frames far away.
+    Array.from(activeLoads.keys()).forEach((index) => {
+      if (!nextWantedFrames.has(index)) cancelLoad(index);
+    });
+
+    priorityOrder.forEach((index) => {
+      const entry = frameCache.get(index);
+      if (isLoadedEntry(entry) || (entry && entry.state === "loading")) {
+        touchEntry(entry);
+        return;
+      }
+
+      if (!queuedFrames.has(index)) {
+        loadQueue.push(index);
+        queuedFrames.add(index);
+      }
+    });
+
+    trimCache();
+    pumpLoadQueue();
   }
 
   function getScrollProgress() {
@@ -222,10 +415,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 1;
     const maxScroll = Math.max(1, scrollHeight - viewportHeight);
     return Math.max(0, Math.min(1, scrollTop / maxScroll));
-  }
-
-  function updateScrollProgress() {
-    targetProgress = getScrollProgress();
   }
 
   function updateActiveStep(progress) {
@@ -249,75 +438,78 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function tick() {
-    if (!prefersReducedMotion) {
-      currentProgress += (targetProgress - currentProgress) * 0.16;
+  function updateFromScroll() {
+    const progress = getScrollProgress();
+    const nextDesiredFrame = Math.min(
+      TOTAL_FRAMES - 1,
+      Math.max(0, Math.round(progress * (TOTAL_FRAMES - 1))),
+    );
 
-      if (Math.abs(targetProgress - currentProgress) < 0.0001) {
-        currentProgress = targetProgress;
-      }
+    updateActiveStep(progress);
 
-      const frameIndex = Math.min(
-        TOTAL_FRAMES - 1,
-        Math.max(0, Math.round(currentProgress * (TOTAL_FRAMES - 1))),
-      );
-
-      if (frameIndex !== lastDrawnFrame) {
-        loadFrame(frameIndex);
-        const img = findClosestLoadedImage(frameIndex);
-        if (img) {
-          drawFrame(img);
-          lastDrawnFrame = frameIndex;
-        }
-      }
-
-      updateActiveStep(currentProgress);
-    } else {
-      updateActiveStep(getScrollProgress());
+    if (nextDesiredFrame !== desiredFrame) {
+      scrollDirection = Math.sign(nextDesiredFrame - desiredFrame) || scrollDirection;
+      desiredFrame = nextDesiredFrame;
+      updateLoadWindow(desiredFrame);
+      scheduleCanvasRender();
+      return;
     }
 
-    rafId = requestAnimationFrame(tick);
+    const entry = frameCache.get(desiredFrame);
+    if (!isLoadedEntry(entry) && !(entry && entry.state === "loading")) {
+      updateLoadWindow(desiredFrame);
+    }
   }
 
   navLinks.forEach((link) => {
-    link.addEventListener("click", (e) => {
+    link.addEventListener("click", (event) => {
       const stepNavAttr = link.getAttribute("data-step-nav");
       if (stepNavAttr === null) return;
-      e.preventDefault();
 
+      event.preventDefault();
       const stepIdx = parseInt(stepNavAttr, 10);
       const scrollingElement = document.scrollingElement || document.documentElement;
       const maxScroll = Math.max(1, scrollingElement.scrollHeight - window.innerHeight);
       const targetY = stepIdx === 0 ? 0 : maxScroll;
 
-      window.scrollTo({ top: targetY, behavior: prefersReducedMotion ? "auto" : "smooth" });
+      window.scrollTo({
+        top: targetY,
+        behavior: prefersReducedMotion ? "auto" : "smooth",
+      });
     });
   });
 
-  // Native scroll is the source of truth. Wheel/touch listeners only refresh
-  // progress; they never preventDefault, so scrolling cannot be blocked.
-  window.addEventListener("scroll", updateScrollProgress, { passive: true });
-  window.addEventListener("wheel", updateScrollProgress, { passive: true });
-  window.addEventListener("touchmove", updateScrollProgress, { passive: true });
+  window.addEventListener("scroll", updateFromScroll, { passive: true });
   window.addEventListener("resize", () => {
     resizeCanvas();
-    updateScrollProgress();
+    updateLoadWindow(desiredFrame);
+    updateFromScroll();
   });
   window.addEventListener("orientationchange", () => {
     setTimeout(() => {
       resizeCanvas();
-      updateScrollProgress();
+      updateLoadWindow(desiredFrame);
+      updateFromScroll();
     }, 150);
   });
-  window.addEventListener("pageshow", updateScrollProgress);
+  window.addEventListener("pageshow", () => {
+    resizeCanvas();
+    updateFromScroll();
+  });
 
   resizeCanvas();
-  preloadFrames();
-  updateScrollProgress();
+  desiredFrame = Math.round(getScrollProgress() * (TOTAL_FRAMES - 1));
   updateActiveStep(getScrollProgress());
-  tick();
+  updateLoadWindow(desiredFrame);
+  scheduleCanvasRender(true);
 
   window.addEventListener("beforeunload", () => {
-    if (rafId) cancelAnimationFrame(rafId);
+    destroyed = true;
+    if (renderRafId) cancelAnimationFrame(renderRafId);
+    Array.from(activeLoads.keys()).forEach(cancelLoad);
+    frameCache.clear();
+    loadQueue = [];
+    queuedFrames.clear();
+    wantedFrames.clear();
   });
 });
