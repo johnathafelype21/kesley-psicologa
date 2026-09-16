@@ -2,30 +2,26 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Kesley Lilian — Psicóloga Clínica | TCC & Saúde Emocional</title>
   <meta name="description" content="Psicoterapia individual online e presencial para adultos com base na TCC. Um espaço seguro e acolhedor para compreender suas emoções e construir novos caminhos.">
 
-  <!-- Typography: Instrument Sans & Newsreader -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wdth,wght@0,75..100,400..700;1,75..100,400..700&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@1,6..72,400&display=swap">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
 
-  <link rel="stylesheet" href="style.css">
+  <link rel="preload" as="image" href="/landing/assets/frames/frame_0000.webp" fetchpriority="high">
+  <link rel="stylesheet" href="/landing/style.css">
 </head>
 <body>
 
-  <!-- HERO 3D SCROLL EXPERIENCE -->
   <div class="scroll-experience" id="experience">
-    
-    <!-- Fixed Background & Canvas Viewport -->
     <div class="canvas-sticky-wrapper" id="stickyWrapper">
       <canvas id="heroCanvas" class="hero-canvas" aria-label="Cena 3D interativa de acolhimento e transformação"></canvas>
       <div class="hero-edge" aria-hidden="true"></div>
-      
-      <!-- Top Brand & Navigation -->
+
       <header class="hero-header">
         <a href="#step-1" class="section-brand" aria-label="Kesley Lilian Psicóloga - Início">
           <span class="brand-title">KESLEY LILIAN</span>
@@ -41,13 +37,10 @@
             class="nav-link nav-link--cta"
             target="_blank"
             rel="noopener noreferrer"
-          >
-            Contato
-          </a>
+          >Contato</a>
         </nav>
       </header>
 
-      <!-- Bottom Meta Line & Scroll Indicator -->
       <footer class="hero-footer">
         <div class="footer-meta-group">
           <div class="hero-meta-item">
@@ -66,7 +59,6 @@
           </div>
         </div>
 
-        <!-- Scroll Progress Cue -->
         <div class="scroll-cue" id="scrollCue">
           <span class="cue-bar"><span class="cue-progress" id="cueProgress"></span></span>
           <span class="cue-text">Role para transformar a cena</span>
@@ -77,10 +69,7 @@
       </footer>
     </div>
 
-    <!-- NARRATIVE STAGES (Apenas 2 cópias limpas e diretas) -->
     <div class="steps-overlay">
-      
-      <!-- CÓPIA 1: ACOLHIMENTO & INÍCIO (0% a 50%) -->
       <section class="story-step is-active" id="step-1" data-step="0">
         <div class="hero-editorial">
           <div class="step-badge">PSICOLOGIA CLÍNICA & TCC</div>
@@ -108,7 +97,6 @@
         </div>
       </section>
 
-      <!-- CÓPIA 2: AUTONOMIA & TRANSFORMAÇÃO (50% a 100%) -->
       <section class="story-step" id="step-2" data-step="1">
         <div class="hero-editorial">
           <div class="step-badge">AUTONOMIA & BEM-ESTAR</div>
@@ -136,14 +124,11 @@
           </div>
         </div>
       </section>
-
     </div>
 
-    <!-- Scroll Track spacer defining scrollable length -->
     <div class="scroll-track" id="scrollTrack" aria-hidden="true"></div>
-
   </div>
 
-  <script src="script.js"></script>
+  <script src="/landing/script.js" defer></script>
 </body>
 </html>
