@@ -1,75 +1,90 @@
 document.addEventListener("DOMContentLoaded", () => {
   const TOTAL_FRAMES = 240;
   const FRAMES_DIR = "/landing/assets/frames/";
-  const FRAME_PREFIX = "frame_";
-  const FRAME_EXT = ".webp";
+  const FRAME_PATHS = Array.from({ length: TOTAL_FRAMES }, (_, index) =>
+    `${FRAMES_DIR}frame_${String(index).padStart(4, "0")}.webp`,
+  );
 
-  if ("scrollRestoration" in history) {
-    history.scrollRestoration = "manual";
-  }
+  if ("scrollRestoration" in history) history.scrollRestoration = "manual";
 
+  const experience = document.getElementById("experience");
+  const scrollTrack = document.getElementById("scrollTrack");
   const canvas = document.getElementById("heroCanvas");
   const ctx = canvas ? canvas.getContext("2d", { alpha: false, desynchronized: true }) : null;
-  const stickyWrapper = document.getElementById("stickyWrapper");
-  const scrollTrack = document.getElementById("scrollTrack");
   const cueProgress = document.getElementById("cueProgress");
   const steps = Array.from(document.querySelectorAll(".story-step"));
   const navLinks = Array.from(document.querySelectorAll("[data-step-nav]"));
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  const FRAME_PATHS = Array.from({ length: TOTAL_FRAMES }, (_, index) => {
-    const padIndex = String(index).padStart(4, "0");
-    return `${FRAMES_DIR}${FRAME_PREFIX}${padIndex}${FRAME_EXT}`;
-  });
+  const decodedFrames = new Map();
+  const decodePromises = new Map();
+  const decodeQueue = [];
+  const queuedForDecode = new Set();
+  const warmedFrames = new Set();
 
-  const frameCache = new Map();
-  const activeLoads = new Map();
-  let loadQueue = [];
-  let queuedFrames = new Set();
-  let wantedFrames = new Set();
+  let activeDecodes = 0;
   let desiredFrame = 0;
   let lastDrawnFrame = -1;
   let currentStepIndex = -1;
   let scrollDirection = 1;
-  let renderRafId = 0;
+  let scrollRaf = 0;
+  let drawRaf = 0;
+  let resizeTimer = 0;
   let useCounter = 0;
+  let warmStarted = false;
   let destroyed = false;
-  let forceNextRedraw = true;
 
   document.documentElement.style.overflowX = "hidden";
   document.documentElement.style.overflowY = "auto";
-  document.documentElement.style.height = "auto";
   document.documentElement.style.touchAction = "pan-y";
   document.body.style.overflowX = "hidden";
   document.body.style.overflowY = "auto";
-  document.body.style.height = "auto";
-  document.body.style.minHeight = "100%";
   document.body.style.touchAction = "pan-y";
 
-  // Reduced-motion simplifies typography only. The scroll-controlled frame
-  // sequence remains fully functional and still uses all 240 frames.
-  if (prefersReducedMotion) {
-    if (stickyWrapper) {
-      stickyWrapper.style.position = "fixed";
-      stickyWrapper.style.height = "100svh";
+  function isMobile() {
+    return window.innerWidth <= 760;
+  }
+
+  function applyScrollLength() {
+    const length = isMobile() ? "1400vh" : "1200vh";
+    if (experience) experience.style.minHeight = length;
+    if (scrollTrack) scrollTrack.style.height = length;
+  }
+
+  function getConfig() {
+    if (isMobile()) {
+      return {
+        dpr: 1.15,
+        decodeAhead: 7,
+        decodeBehind: 3,
+        decodeConcurrency: 2,
+        decodedLimit: 11,
+        warmConcurrency: 2,
+      };
     }
+
+    return {
+      dpr: 1.55,
+      decodeAhead: 12,
+      decodeBehind: 5,
+      decodeConcurrency: 4,
+      decodedLimit: 20,
+      warmConcurrency: 3,
+    };
   }
 
   function splitTextIntoChars(element) {
     if (!element || element.dataset.splitDone) return;
     element.dataset.splitDone = "true";
-
     let globalCharIndex = 0;
 
     function processNode(node) {
       if (node.nodeType === Node.TEXT_NODE) {
-        const text = node.textContent;
+        const text = node.textContent || "";
         if (!text.trim()) return document.createTextNode(text);
 
-        const words = text.split(/(\s+)/);
         const fragment = document.createDocumentFragment();
-
-        words.forEach((word) => {
+        text.split(/(\s+)/).forEach((word) => {
           if (!word) return;
           if (/^\s+$/.test(word)) {
             fragment.appendChild(document.createTextNode(" "));
@@ -78,7 +93,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
           const wordSpan = document.createElement("span");
           wordSpan.className = "word";
-
           for (const char of word) {
             const charSpan = document.createElement("span");
             charSpan.className = "char";
@@ -86,342 +100,157 @@ document.addEventListener("DOMContentLoaded", () => {
             charSpan.textContent = char;
             wordSpan.appendChild(charSpan);
           }
-
           fragment.appendChild(wordSpan);
         });
-
         return fragment;
       }
 
       if (node.nodeType === Node.ELEMENT_NODE) {
         const clone = node.cloneNode(false);
-        Array.from(node.childNodes).forEach((child) => {
-          clone.appendChild(processNode(child));
-        });
+        Array.from(node.childNodes).forEach((child) => clone.appendChild(processNode(child)));
         return clone;
       }
 
       return node.cloneNode(true);
     }
 
-    const fullText = element.textContent.replace(/\s+/g, " ").trim();
-    if (!element.getAttribute("aria-label")) {
-      element.setAttribute("aria-label", fullText);
-    }
+    const fullText = (element.textContent || "").replace(/\s+/g, " ").trim();
+    if (!element.getAttribute("aria-label")) element.setAttribute("aria-label", fullText);
 
     const fragment = document.createDocumentFragment();
-    Array.from(element.childNodes).forEach((child) => {
-      fragment.appendChild(processNode(child));
-    });
-
-    element.innerHTML = "";
-    element.appendChild(fragment);
+    Array.from(element.childNodes).forEach((child) => fragment.appendChild(processNode(child)));
+    element.replaceChildren(fragment);
   }
 
   if (!prefersReducedMotion) {
     document.querySelectorAll(".section-title").forEach(splitTextIntoChars);
   }
 
-  function getLoaderConfig() {
-    const isMobile = window.innerWidth <= 760;
-    return {
-      ahead: isMobile ? 5 : 8,
-      behind: isMobile ? 3 : 5,
-      cacheLimit: isMobile ? 10 : 18,
-      concurrency: isMobile ? 3 : 5,
-    };
+  function getSourceWidth(source) {
+    return source.width || source.naturalWidth || 0;
   }
 
-  function isLoadedEntry(entry) {
-    return Boolean(
-      entry &&
-        entry.state === "loaded" &&
-        entry.img &&
-        entry.img.complete &&
-        entry.img.naturalWidth > 0,
-    );
+  function getSourceHeight(source) {
+    return source.height || source.naturalHeight || 0;
   }
 
-  function touchEntry(entry) {
+  function closeSource(source) {
+    if (source && typeof source.close === "function") {
+      try {
+        source.close();
+      } catch {
+        // Already closed in some WebViews.
+      }
+    }
+  }
+
+  function touchDecoded(index) {
+    const entry = decodedFrames.get(index);
     if (entry) entry.lastUsed = ++useCounter;
   }
 
-  function interpolateTrack(progress, points) {
-    const clamped = Math.max(0, Math.min(1, progress));
+  function trimDecodedCache() {
+    const { decodedLimit } = getConfig();
+    if (decodedFrames.size <= decodedLimit) return;
 
-    for (let index = 0; index < points.length - 1; index += 1) {
-      const current = points[index];
-      const next = points[index + 1];
-      if (clamped < current.p || clamped > next.p) continue;
-
-      const range = Math.max(0.0001, next.p - current.p);
-      const local = (clamped - current.p) / range;
-      return current.value + (next.value - current.value) * local;
+    const protectedFrames = new Set([desiredFrame]);
+    for (let distance = 1; distance <= 2; distance += 1) {
+      protectedFrames.add(desiredFrame + distance * scrollDirection);
+      protectedFrames.add(desiredFrame - distance * scrollDirection);
     }
 
-    return points[points.length - 1].value;
-  }
-
-  function getMobileFocus(progress) {
-    // The viewport pans through the frame as the butterfly travels. The wider
-    // mobile crop plus this focus curve keeps the butterfly inside the phone
-    // viewport instead of locking the composition to one fixed horizontal crop.
-    const focusX = interpolateTrack(progress, [
-      { p: 0.0, value: 0.78 },
-      { p: 0.16, value: 0.73 },
-      { p: 0.34, value: 0.66 },
-      { p: 0.52, value: 0.57 },
-      { p: 0.7, value: 0.48 },
-      { p: 0.86, value: 0.43 },
-      { p: 1.0, value: 0.5 },
-    ]);
-
-    const focusY = interpolateTrack(progress, [
-      { p: 0.0, value: 0.42 },
-      { p: 0.35, value: 0.39 },
-      { p: 0.7, value: 0.36 },
-      { p: 1.0, value: 0.4 },
-    ]);
-
-    return { focusX, focusY };
-  }
-
-  function drawFrame(index, img) {
-    if (!ctx || !canvas || !img || !img.complete || img.naturalWidth === 0) return false;
-
-    const w = canvas.width;
-    const h = canvas.height;
-    const imgW = img.naturalWidth;
-    const imgH = img.naturalHeight;
-    const isMobile = window.innerWidth <= 760;
-    const progress = index / (TOTAL_FRAMES - 1);
-
-    let scale;
-    let offsetX;
-    let offsetY;
-
-    if (isMobile) {
-      // A slightly wider crop than cover exposes more of the cinematic frame.
-      // The background color fills the small vertical breathing area naturally.
-      scale = Math.max(w / imgW, (h / imgH) * 0.82);
-      const drawW = imgW * scale;
-      const drawH = imgH * scale;
-      const { focusX, focusY } = getMobileFocus(progress);
-      offsetX = w * 0.5 - drawW * focusX;
-      offsetY = h * 0.42 - drawH * focusY;
-    } else {
-      scale = Math.max(w / imgW, h / imgH);
-      const drawW = imgW * scale;
-      const drawH = imgH * scale;
-      offsetX = (w - drawW) * 0.95;
-      offsetY = (h - drawH) * 0.5;
-    }
-
-    const drawW = imgW * scale;
-    const drawH = imgH * scale;
-
-    // Clamp mobile panning so we never expose empty horizontal canvas.
-    if (isMobile && drawW >= w) {
-      offsetX = Math.min(0, Math.max(w - drawW, offsetX));
-    }
-    if (isMobile && drawH >= h) {
-      offsetY = Math.min(0, Math.max(h - drawH, offsetY));
-    }
-
-    ctx.fillStyle = "#F7F3EA";
-    ctx.fillRect(0, 0, w, h);
-    ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
-    lastDrawnFrame = index;
-    return true;
-  }
-
-  function findClosestLoadedFrame(index) {
-    const exact = frameCache.get(index);
-    if (isLoadedEntry(exact)) return { index, entry: exact };
-
-    for (let offset = 1; offset < TOTAL_FRAMES; offset += 1) {
-      const primary = index + offset * scrollDirection;
-      if (primary >= 0 && primary < TOTAL_FRAMES) {
-        const entry = frameCache.get(primary);
-        if (isLoadedEntry(entry)) return { index: primary, entry };
-      }
-
-      const secondary = index - offset * scrollDirection;
-      if (secondary >= 0 && secondary < TOTAL_FRAMES) {
-        const entry = frameCache.get(secondary);
-        if (isLoadedEntry(entry)) return { index: secondary, entry };
-      }
-    }
-
-    return null;
-  }
-
-  function renderDesiredFrame(force = false) {
-    const match = findClosestLoadedFrame(desiredFrame);
-    if (!match) return;
-
-    touchEntry(match.entry);
-    if (!force && !forceNextRedraw && match.index === lastDrawnFrame) return;
-
-    if (drawFrame(match.index, match.entry.img)) {
-      forceNextRedraw = false;
-    }
-  }
-
-  function scheduleCanvasRender(force = false) {
-    if (destroyed) return;
-    if (force) forceNextRedraw = true;
-    if (renderRafId) return;
-
-    renderRafId = requestAnimationFrame(() => {
-      renderRafId = 0;
-      renderDesiredFrame(forceNextRedraw);
-    });
-  }
-
-  function resizeCanvas() {
-    if (!canvas) return;
-
-    const isMobile = window.innerWidth <= 760;
-    const dprCap = isMobile ? 1.4 : 2;
-    const dpr = Math.min(window.devicePixelRatio || 1, dprCap);
-    const cssWidth = Math.max(1, window.innerWidth);
-    const cssHeight = Math.max(1, window.innerHeight);
-    const nextWidth = Math.round(cssWidth * dpr);
-    const nextHeight = Math.round(cssHeight * dpr);
-
-    if (canvas.width !== nextWidth || canvas.height !== nextHeight) {
-      canvas.width = nextWidth;
-      canvas.height = nextHeight;
-      forceNextRedraw = true;
-    }
-
-    scheduleCanvasRender(true);
-  }
-
-  function cancelLoad(index) {
-    const img = activeLoads.get(index);
-    if (!img) return;
-
-    img.onload = null;
-    img.onerror = null;
-    try {
-      img.removeAttribute("src");
-    } catch {
-      // Safe no-op in older embedded WebViews.
-    }
-
-    activeLoads.delete(index);
-    const entry = frameCache.get(index);
-    if (entry && entry.state === "loading") frameCache.delete(index);
-  }
-
-  function disposeEntry(index) {
-    const entry = frameCache.get(index);
-    if (!entry || entry.state === "loading") return;
-
-    if (entry.img) {
-      entry.img.onload = null;
-      entry.img.onerror = null;
-      try {
-        entry.img.removeAttribute("src");
-      } catch {
-        // Safe no-op in older embedded WebViews.
-      }
-    }
-
-    frameCache.delete(index);
-  }
-
-  function trimCache() {
-    const { cacheLimit } = getLoaderConfig();
-    const loadedEntries = Array.from(frameCache.entries()).filter(([, entry]) =>
-      isLoadedEntry(entry),
-    );
-
-    if (loadedEntries.length <= cacheLimit) return;
-
-    const removable = loadedEntries
-      .filter(([index]) => !wantedFrames.has(index) && index !== desiredFrame)
+    const candidates = Array.from(decodedFrames.entries())
+      .filter(([index]) => !protectedFrames.has(index))
       .sort((a, b) => a[1].lastUsed - b[1].lastUsed);
 
-    let loadedCount = loadedEntries.length;
-    for (const [index] of removable) {
-      if (loadedCount <= cacheLimit) break;
-      disposeEntry(index);
-      loadedCount -= 1;
+    while (decodedFrames.size > decodedLimit && candidates.length) {
+      const [index, entry] = candidates.shift();
+      closeSource(entry.source);
+      decodedFrames.delete(index);
     }
   }
 
-  function pumpLoadQueue() {
-    if (destroyed) return;
-    const { concurrency } = getLoaderConfig();
+  async function decodeViaImageElement(index) {
+    const img = new Image();
+    img.decoding = "async";
+    img.src = FRAME_PATHS[index];
 
-    while (activeLoads.size < concurrency && loadQueue.length > 0) {
-      const index = loadQueue.shift();
-      queuedFrames.delete(index);
-
-      if (!wantedFrames.has(index)) continue;
-
-      const existing = frameCache.get(index);
-      if (isLoadedEntry(existing) || (existing && existing.state === "loading")) continue;
-      if (existing && existing.state === "error") frameCache.delete(index);
-
-      const img = new Image();
-      const entry = { img, state: "loading", lastUsed: ++useCounter };
-      frameCache.set(index, entry);
-      activeLoads.set(index, img);
-      img.decoding = "async";
-
-      img.onload = () => {
-        if (destroyed) return;
-
-        activeLoads.delete(index);
-        const currentEntry = frameCache.get(index);
-        if (!currentEntry || currentEntry.img !== img) {
-          pumpLoadQueue();
-          return;
-        }
-
-        currentEntry.state = "loaded";
-        touchEntry(currentEntry);
-
-        // If a fallback was painted while the exact frame was downloading,
-        // immediately replace it with the correct frame once ready.
-        if (index === desiredFrame || lastDrawnFrame < 0) {
-          scheduleCanvasRender(true);
-        }
-
-        trimCache();
-        pumpLoadQueue();
-      };
-
-      img.onerror = () => {
-        if (destroyed) return;
-
-        activeLoads.delete(index);
-        const currentEntry = frameCache.get(index);
-        if (currentEntry && currentEntry.img === img) currentEntry.state = "error";
-        console.error(`Falha ao carregar frame ${index}: ${FRAME_PATHS[index]}`);
-        pumpLoadQueue();
-      };
-
-      img.src = FRAME_PATHS[index];
+    if (typeof img.decode === "function") {
+      await img.decode();
+    } else {
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+      });
     }
+
+    return img;
   }
 
-  function buildPriorityOrder(center) {
-    const { ahead, behind } = getLoaderConfig();
+  async function fetchAndDecode(index) {
+    const cached = decodedFrames.get(index);
+    if (cached) {
+      touchDecoded(index);
+      return cached.source;
+    }
+
+    if (decodePromises.has(index)) return decodePromises.get(index);
+
+    const promise = (async () => {
+      let source;
+      const response = await fetch(FRAME_PATHS[index], { cache: "force-cache" });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const blob = await response.blob();
+
+      if (typeof createImageBitmap === "function") {
+        try {
+          source = await createImageBitmap(blob);
+        } catch {
+          source = await decodeViaImageElement(index);
+        }
+      } else {
+        source = await decodeViaImageElement(index);
+      }
+
+      if (destroyed) {
+        closeSource(source);
+        return source;
+      }
+
+      decodedFrames.set(index, { source, lastUsed: ++useCounter });
+      trimDecodedCache();
+      return source;
+    })()
+      .catch((error) => {
+        console.error(`Falha ao preparar frame ${index}`, error);
+        throw error;
+      })
+      .finally(() => decodePromises.delete(index));
+
+    decodePromises.set(index, promise);
+    return promise;
+  }
+
+  function queueFrame(index, urgent = false) {
+    if (index < 0 || index >= TOTAL_FRAMES) return;
+    if (decodedFrames.has(index) || decodePromises.has(index) || queuedForDecode.has(index)) return;
+
+    queuedForDecode.add(index);
+    if (urgent) decodeQueue.unshift(index);
+    else decodeQueue.push(index);
+  }
+
+  function buildDecodeWindow(center) {
+    const { decodeAhead, decodeBehind } = getConfig();
     const order = [center];
-    const maxDistance = Math.max(ahead, behind);
+    const maxDistance = Math.max(decodeAhead, decodeBehind);
 
     for (let distance = 1; distance <= maxDistance; distance += 1) {
-      if (distance <= ahead) {
+      if (distance <= decodeAhead) {
         const forward = center + distance * scrollDirection;
         if (forward >= 0 && forward < TOTAL_FRAMES) order.push(forward);
       }
-
-      if (distance <= behind) {
+      if (distance <= decodeBehind) {
         const backward = center - distance * scrollDirection;
         if (backward >= 0 && backward < TOTAL_FRAMES) order.push(backward);
       }
@@ -430,166 +259,283 @@ document.addEventListener("DOMContentLoaded", () => {
     return order;
   }
 
-  function freeSlotForExactFrame(center) {
-    const { concurrency } = getLoaderConfig();
-    const exact = frameCache.get(center);
-    if (isLoadedEntry(exact) || (exact && exact.state === "loading")) return;
-    if (activeLoads.size < concurrency) return;
+  function reprioritizeDecodeQueue(center) {
+    const windowOrder = buildDecodeWindow(center);
+    const wanted = new Set(windowOrder);
 
-    const candidate = Array.from(activeLoads.keys())
-      .filter((index) => index !== center)
-      .sort((a, b) => Math.abs(b - center) - Math.abs(a - center))[0];
+    for (let index = decodeQueue.length - 1; index >= 0; index -= 1) {
+      if (!wanted.has(decodeQueue[index])) {
+        queuedForDecode.delete(decodeQueue[index]);
+        decodeQueue.splice(index, 1);
+      }
+    }
 
-    if (candidate !== undefined) cancelLoad(candidate);
+    windowOrder.slice().reverse().forEach((index) => queueFrame(index, true));
+    pumpDecodeQueue();
   }
 
-  function updateLoadWindow(center) {
-    const priorityOrder = buildPriorityOrder(center);
-    const nextWantedFrames = new Set(priorityOrder);
-    wantedFrames = nextWantedFrames;
+  function pumpDecodeQueue() {
+    if (destroyed) return;
+    const { decodeConcurrency } = getConfig();
 
-    loadQueue = [];
-    queuedFrames.clear();
+    while (activeDecodes < decodeConcurrency && decodeQueue.length) {
+      const index = decodeQueue.shift();
+      queuedForDecode.delete(index);
+      if (decodedFrames.has(index) || decodePromises.has(index)) continue;
 
-    // Avoid load thrashing while scrolling continuously: only cancel requests
-    // that are now far outside the useful neighborhood.
-    const cancelDistance = window.innerWidth <= 760 ? 12 : 20;
-    Array.from(activeLoads.keys()).forEach((index) => {
-      if (Math.abs(index - center) > cancelDistance) cancelLoad(index);
-    });
+      activeDecodes += 1;
+      fetchAndDecode(index)
+        .then(() => {
+          if (index === desiredFrame) scheduleDraw();
+        })
+        .catch(() => {})
+        .finally(() => {
+          activeDecodes -= 1;
+          pumpDecodeQueue();
+        });
+    }
+  }
 
-    freeSlotForExactFrame(center);
+  function buildWarmOrder(center) {
+    const order = [];
+    const used = new Set();
 
-    priorityOrder.forEach((index) => {
-      const entry = frameCache.get(index);
-      if (isLoadedEntry(entry) || (entry && entry.state === "loading")) {
-        touchEntry(entry);
-        return;
+    for (let distance = 0; distance < TOTAL_FRAMES; distance += 1) {
+      const forward = center + distance;
+      const backward = center - distance;
+      if (forward >= 0 && forward < TOTAL_FRAMES && !used.has(forward)) {
+        used.add(forward);
+        order.push(forward);
       }
-
-      if (!queuedFrames.has(index)) {
-        loadQueue.push(index);
-        queuedFrames.add(index);
+      if (backward >= 0 && backward < TOTAL_FRAMES && !used.has(backward)) {
+        used.add(backward);
+        order.push(backward);
       }
-    });
+    }
 
-    trimCache();
-    pumpLoadQueue();
+    return order;
+  }
+
+  async function warmOne(index) {
+    if (warmedFrames.has(index) || decodedFrames.has(index) || decodePromises.has(index)) return;
+
+    try {
+      const response = await fetch(FRAME_PATHS[index], { cache: "force-cache" });
+      if (response.ok) {
+        await response.arrayBuffer();
+        warmedFrames.add(index);
+      }
+    } catch {
+      // Foreground decoder retries normally.
+    }
+  }
+
+  function startNetworkWarmup() {
+    if (warmStarted || destroyed) return;
+    warmStarted = true;
+
+    const order = buildWarmOrder(desiredFrame);
+    const { warmConcurrency } = getConfig();
+    let cursor = 0;
+
+    const worker = async () => {
+      while (!destroyed && cursor < order.length) {
+        const index = order[cursor++];
+        if (Math.abs(index - desiredFrame) <= 10) continue;
+        await warmOne(index);
+      }
+    };
+
+    for (let index = 0; index < warmConcurrency; index += 1) worker();
+  }
+
+  function drawFrame(index) {
+    if (!ctx || !canvas) return false;
+    const entry = decodedFrames.get(index);
+    if (!entry) return false;
+
+    const source = entry.source;
+    const imgW = getSourceWidth(source);
+    const imgH = getSourceHeight(source);
+    if (!imgW || !imgH) return false;
+
+    const width = canvas.width;
+    const height = canvas.height;
+    let drawW;
+    let drawH;
+    let offsetX;
+    let offsetY;
+
+    if (isMobile()) {
+      // Keep essentially the whole cinematic frame inside the phone viewport.
+      // This removes the guessed crop that was losing the butterfly mid-flight.
+      const cinematicHeight = height * 0.62;
+      const scale = Math.min(width / imgW, cinematicHeight / imgH) * 1.02;
+      drawW = imgW * scale;
+      drawH = imgH * scale;
+      offsetX = (width - drawW) * 0.5;
+      offsetY = height * 0.055 + (cinematicHeight - drawH) * 0.5;
+    } else {
+      const scale = Math.max(width / imgW, height / imgH);
+      drawW = imgW * scale;
+      drawH = imgH * scale;
+      offsetX = (width - drawW) * 0.95;
+      offsetY = (height - drawH) * 0.5;
+    }
+
+    ctx.fillStyle = "#F7F3EA";
+    ctx.fillRect(0, 0, width, height);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "medium";
+    ctx.drawImage(source, offsetX, offsetY, drawW, drawH);
+
+    lastDrawnFrame = index;
+    touchDecoded(index);
+    return true;
+  }
+
+  function scheduleDraw() {
+    if (destroyed || drawRaf) return;
+    drawRaf = requestAnimationFrame(() => {
+      drawRaf = 0;
+      // Do not show a wrong nearby frame. Hold the last correct frame until the
+      // exact requested frame has already been decoded and is ready to draw.
+      drawFrame(desiredFrame);
+    });
+  }
+
+  function resizeCanvas() {
+    if (!canvas) return;
+    const { dpr } = getConfig();
+    const actualDpr = Math.min(window.devicePixelRatio || 1, dpr);
+    const nextWidth = Math.max(1, Math.round(window.innerWidth * actualDpr));
+    const nextHeight = Math.max(1, Math.round(window.innerHeight * actualDpr));
+
+    if (canvas.width !== nextWidth || canvas.height !== nextHeight) {
+      canvas.width = nextWidth;
+      canvas.height = nextHeight;
+    }
+
+    scheduleDraw();
   }
 
   function getScrollProgress() {
     const scrollingElement = document.scrollingElement || document.documentElement;
-    const scrollTop = scrollingElement.scrollTop || window.scrollY || 0;
-    const scrollHeight = scrollingElement.scrollHeight;
-    const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 1;
-    const maxScroll = Math.max(1, scrollHeight - viewportHeight);
-    return Math.max(0, Math.min(1, scrollTop / maxScroll));
+    const top = scrollingElement.scrollTop || window.scrollY || 0;
+    const max = Math.max(1, scrollingElement.scrollHeight - window.innerHeight);
+    return Math.max(0, Math.min(1, top / max));
+  }
+
+  function frameFromProgress(progress) {
+    return Math.min(TOTAL_FRAMES - 1, Math.max(0, Math.floor(progress * TOTAL_FRAMES)));
   }
 
   function updateActiveStep(progress) {
-    if (steps.length === 0) return;
-
-    const stepIndex = Math.min(
-      steps.length - 1,
-      Math.max(0, Math.floor(progress * steps.length)),
-    );
+    if (!steps.length) return;
+    const stepIndex = Math.min(steps.length - 1, Math.floor(progress * steps.length));
 
     if (stepIndex !== currentStepIndex) {
       currentStepIndex = stepIndex;
-
-      steps.forEach((step, index) => {
-        step.classList.toggle("is-active", index === stepIndex);
-      });
-
+      steps.forEach((step, index) => step.classList.toggle("is-active", index === stepIndex));
       navLinks.forEach((link) => {
-        const linkStep = parseInt(link.getAttribute("data-step-nav"), 10);
-        link.classList.toggle("is-active", linkStep === stepIndex);
+        const index = Number.parseInt(link.getAttribute("data-step-nav"), 10);
+        link.classList.toggle("is-active", index === stepIndex);
       });
     }
 
     if (cueProgress) cueProgress.style.width = `${Math.round(progress * 100)}%`;
   }
 
-  function updateFromScroll() {
+  function syncFromScroll() {
+    scrollRaf = 0;
     const progress = getScrollProgress();
-    const nextDesiredFrame = Math.min(
-      TOTAL_FRAMES - 1,
-      Math.max(0, Math.round(progress * (TOTAL_FRAMES - 1))),
-    );
+    const nextFrame = frameFromProgress(progress);
 
     updateActiveStep(progress);
 
-    if (nextDesiredFrame !== desiredFrame) {
-      scrollDirection = Math.sign(nextDesiredFrame - desiredFrame) || scrollDirection;
-      desiredFrame = nextDesiredFrame;
-      updateLoadWindow(desiredFrame);
-      scheduleCanvasRender();
-      return;
+    if (nextFrame !== desiredFrame) {
+      scrollDirection = Math.sign(nextFrame - desiredFrame) || scrollDirection;
+      desiredFrame = nextFrame;
+      reprioritizeDecodeQueue(desiredFrame);
+    } else if (!decodedFrames.has(desiredFrame) && !decodePromises.has(desiredFrame)) {
+      reprioritizeDecodeQueue(desiredFrame);
     }
 
-    const entry = frameCache.get(desiredFrame);
-    if (!isLoadedEntry(entry) && !(entry && entry.state === "loading")) {
-      updateLoadWindow(desiredFrame);
-    }
+    scheduleDraw();
+  }
+
+  function onScroll() {
+    if (scrollRaf) return;
+    scrollRaf = requestAnimationFrame(syncFromScroll);
   }
 
   navLinks.forEach((link) => {
     link.addEventListener("click", (event) => {
-      const stepNavAttr = link.getAttribute("data-step-nav");
-      if (stepNavAttr === null || steps.length === 0) return;
-
+      const raw = link.getAttribute("data-step-nav");
+      if (raw === null) return;
       event.preventDefault();
-      const stepIdx = parseInt(stepNavAttr, 10);
+
+      const stepIndex = Number.parseInt(raw, 10);
       const scrollingElement = document.scrollingElement || document.documentElement;
       const maxScroll = Math.max(1, scrollingElement.scrollHeight - window.innerHeight);
-      const denominator = Math.max(1, steps.length - 1);
-      const targetProgress = Math.max(0, Math.min(1, stepIdx / denominator));
+      const progress = steps.length > 1 ? stepIndex / (steps.length - 1) : 0;
 
       window.scrollTo({
-        top: maxScroll * targetProgress,
+        top: maxScroll * progress,
         behavior: prefersReducedMotion ? "auto" : "smooth",
       });
     });
   });
 
-  window.addEventListener("scroll", updateFromScroll, { passive: true });
-  window.addEventListener("wheel", updateFromScroll, { passive: true });
-  window.addEventListener("touchmove", updateFromScroll, { passive: true });
+  window.addEventListener("scroll", onScroll, { passive: true });
   window.addEventListener("resize", () => {
-    resizeCanvas();
-    updateLoadWindow(desiredFrame);
-    updateFromScroll();
-  });
-  window.addEventListener("orientationchange", () => {
-    setTimeout(() => {
+    clearTimeout(resizeTimer);
+    resizeTimer = window.setTimeout(() => {
+      applyScrollLength();
       resizeCanvas();
-      updateLoadWindow(desiredFrame);
-      updateFromScroll();
-    }, 150);
+      syncFromScroll();
+    }, 80);
+  }, { passive: true });
+  window.addEventListener("orientationchange", () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = window.setTimeout(() => {
+      applyScrollLength();
+      resizeCanvas();
+      syncFromScroll();
+    }, 160);
   });
   window.addEventListener("pageshow", () => {
+    applyScrollLength();
     resizeCanvas();
-    updateFromScroll();
+    syncFromScroll();
   });
 
+  applyScrollLength();
   resizeCanvas();
-  const initialProgress = getScrollProgress();
-  desiredFrame = Math.round(initialProgress * (TOTAL_FRAMES - 1));
-  updateActiveStep(initialProgress);
-  updateLoadWindow(desiredFrame);
-  scheduleCanvasRender(true);
+  desiredFrame = frameFromProgress(getScrollProgress());
+  updateActiveStep(getScrollProgress());
+  queueFrame(desiredFrame, true);
+  reprioritizeDecodeQueue(desiredFrame);
 
-  // Frame 0 is also preloaded in HTML; touching it here ensures the loader
-  // starts from the same source of truth as the complete 0..239 sequence.
-  if (scrollTrack) scrollTrack.dataset.totalFrames = String(FRAME_PATHS.length);
+  fetchAndDecode(desiredFrame)
+    .then(() => {
+      scheduleDraw();
+      if (typeof requestIdleCallback === "function") {
+        requestIdleCallback(startNetworkWarmup, { timeout: 700 });
+      } else {
+        setTimeout(startNetworkWarmup, 350);
+      }
+    })
+    .catch(() => setTimeout(startNetworkWarmup, 500));
 
   window.addEventListener("beforeunload", () => {
     destroyed = true;
-    if (renderRafId) cancelAnimationFrame(renderRafId);
-    Array.from(activeLoads.keys()).forEach(cancelLoad);
-    frameCache.clear();
-    loadQueue = [];
-    queuedFrames.clear();
-    wantedFrames.clear();
+    if (scrollRaf) cancelAnimationFrame(scrollRaf);
+    if (drawRaf) cancelAnimationFrame(drawRaf);
+    clearTimeout(resizeTimer);
+    decodedFrames.forEach((entry) => closeSource(entry.source));
+    decodedFrames.clear();
+    decodeQueue.length = 0;
+    queuedForDecode.clear();
   });
 });
