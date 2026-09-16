@@ -9,13 +9,18 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const canvas = document.getElementById("heroCanvas");
-  const ctx = canvas ? canvas.getContext("2d", { alpha: false }) : null;
+  const ctx = canvas ? canvas.getContext("2d", { alpha: false, desynchronized: true }) : null;
   const stickyWrapper = document.getElementById("stickyWrapper");
   const scrollTrack = document.getElementById("scrollTrack");
   const cueProgress = document.getElementById("cueProgress");
   const steps = Array.from(document.querySelectorAll(".story-step"));
   const navLinks = Array.from(document.querySelectorAll("[data-step-nav]"));
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const FRAME_PATHS = Array.from({ length: TOTAL_FRAMES }, (_, index) => {
+    const padIndex = String(index).padStart(4, "0");
+    return `${FRAMES_DIR}${FRAME_PREFIX}${padIndex}${FRAME_EXT}`;
+  });
 
   const frameCache = new Map();
   const activeLoads = new Map();
@@ -31,8 +36,6 @@ document.addEventListener("DOMContentLoaded", () => {
   let destroyed = false;
   let forceNextRedraw = true;
 
-  // Keep native scrolling as the only source of movement. Nothing here calls
-  // preventDefault(), so mouse wheel, touchpad and touch remain browser-native.
   document.documentElement.style.overflowX = "hidden";
   document.documentElement.style.overflowY = "auto";
   document.documentElement.style.height = "auto";
@@ -43,11 +46,9 @@ document.addEventListener("DOMContentLoaded", () => {
   document.body.style.minHeight = "100%";
   document.body.style.touchAction = "pan-y";
 
-  // Windows/macOS reduced-motion should simplify text transitions, not disable
-  // the scroll-controlled image sequence. Inline styles override the old CSS
-  // fallback that shortened the track and turned the fixed canvas into sticky.
+  // Reduced-motion simplifies typography only. The scroll-controlled frame
+  // sequence remains fully functional and still uses all 240 frames.
   if (prefersReducedMotion) {
-    if (scrollTrack) scrollTrack.style.height = "220vh";
     if (stickyWrapper) {
       stickyWrapper.style.position = "fixed";
       stickyWrapper.style.height = "100svh";
@@ -121,16 +122,12 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll(".section-title").forEach(splitTextIntoChars);
   }
 
-  function getFramePath(index) {
-    const padIndex = String(index).padStart(4, "0");
-    return `${FRAMES_DIR}${FRAME_PREFIX}${padIndex}${FRAME_EXT}`;
-  }
-
   function getLoaderConfig() {
     const isMobile = window.innerWidth <= 760;
     return {
-      radius: isMobile ? 3 : 6,
-      cacheLimit: isMobile ? 10 : 20,
+      ahead: isMobile ? 5 : 8,
+      behind: isMobile ? 3 : 5,
+      cacheLimit: isMobile ? 10 : 18,
       concurrency: isMobile ? 3 : 5,
     };
   }
@@ -149,6 +146,46 @@ document.addEventListener("DOMContentLoaded", () => {
     if (entry) entry.lastUsed = ++useCounter;
   }
 
+  function interpolateTrack(progress, points) {
+    const clamped = Math.max(0, Math.min(1, progress));
+
+    for (let index = 0; index < points.length - 1; index += 1) {
+      const current = points[index];
+      const next = points[index + 1];
+      if (clamped < current.p || clamped > next.p) continue;
+
+      const range = Math.max(0.0001, next.p - current.p);
+      const local = (clamped - current.p) / range;
+      return current.value + (next.value - current.value) * local;
+    }
+
+    return points[points.length - 1].value;
+  }
+
+  function getMobileFocus(progress) {
+    // The viewport pans through the frame as the butterfly travels. The wider
+    // mobile crop plus this focus curve keeps the butterfly inside the phone
+    // viewport instead of locking the composition to one fixed horizontal crop.
+    const focusX = interpolateTrack(progress, [
+      { p: 0.0, value: 0.78 },
+      { p: 0.16, value: 0.73 },
+      { p: 0.34, value: 0.66 },
+      { p: 0.52, value: 0.57 },
+      { p: 0.7, value: 0.48 },
+      { p: 0.86, value: 0.43 },
+      { p: 1.0, value: 0.5 },
+    ]);
+
+    const focusY = interpolateTrack(progress, [
+      { p: 0.0, value: 0.42 },
+      { p: 0.35, value: 0.39 },
+      { p: 0.7, value: 0.36 },
+      { p: 1.0, value: 0.4 },
+    ]);
+
+    return { focusX, focusY };
+  }
+
   function drawFrame(index, img) {
     if (!ctx || !canvas || !img || !img.complete || img.naturalWidth === 0) return false;
 
@@ -156,15 +193,40 @@ document.addEventListener("DOMContentLoaded", () => {
     const h = canvas.height;
     const imgW = img.naturalWidth;
     const imgH = img.naturalHeight;
-    const scale = Math.max(w / imgW, h / imgH);
+    const isMobile = window.innerWidth <= 760;
+    const progress = index / (TOTAL_FRAMES - 1);
+
+    let scale;
+    let offsetX;
+    let offsetY;
+
+    if (isMobile) {
+      // A slightly wider crop than cover exposes more of the cinematic frame.
+      // The background color fills the small vertical breathing area naturally.
+      scale = Math.max(w / imgW, (h / imgH) * 0.82);
+      const drawW = imgW * scale;
+      const drawH = imgH * scale;
+      const { focusX, focusY } = getMobileFocus(progress);
+      offsetX = w * 0.5 - drawW * focusX;
+      offsetY = h * 0.42 - drawH * focusY;
+    } else {
+      scale = Math.max(w / imgW, h / imgH);
+      const drawW = imgW * scale;
+      const drawH = imgH * scale;
+      offsetX = (w - drawW) * 0.95;
+      offsetY = (h - drawH) * 0.5;
+    }
+
     const drawW = imgW * scale;
     const drawH = imgH * scale;
-    const isMobile = window.innerWidth <= 760;
 
-    // Preserve the composition used by the original art direction while
-    // keeping the butterfly/subject visible on narrow screens.
-    const offsetX = isMobile ? (w - drawW) * 0.75 : (w - drawW) * 0.95;
-    const offsetY = (h - drawH) * 0.5;
+    // Clamp mobile panning so we never expose empty horizontal canvas.
+    if (isMobile && drawW >= w) {
+      offsetX = Math.min(0, Math.max(w - drawW, offsetX));
+    }
+    if (isMobile && drawH >= h) {
+      offsetY = Math.min(0, Math.max(h - drawH, offsetY));
+    }
 
     ctx.fillStyle = "#F7F3EA";
     ctx.fillRect(0, 0, w, h);
@@ -175,21 +237,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function findClosestLoadedFrame(index) {
     const exact = frameCache.get(index);
-    if (isLoadedEntry(exact)) {
-      return { index, entry: exact };
-    }
+    if (isLoadedEntry(exact)) return { index, entry: exact };
 
     for (let offset = 1; offset < TOTAL_FRAMES; offset += 1) {
-      const first = index + offset * scrollDirection;
-      if (first >= 0 && first < TOTAL_FRAMES) {
-        const entry = frameCache.get(first);
-        if (isLoadedEntry(entry)) return { index: first, entry };
+      const primary = index + offset * scrollDirection;
+      if (primary >= 0 && primary < TOTAL_FRAMES) {
+        const entry = frameCache.get(primary);
+        if (isLoadedEntry(entry)) return { index: primary, entry };
       }
 
-      const second = index - offset * scrollDirection;
-      if (second >= 0 && second < TOTAL_FRAMES) {
-        const entry = frameCache.get(second);
-        if (isLoadedEntry(entry)) return { index: second, entry };
+      const secondary = index - offset * scrollDirection;
+      if (secondary >= 0 && secondary < TOTAL_FRAMES) {
+        const entry = frameCache.get(secondary);
+        if (isLoadedEntry(entry)) return { index: secondary, entry };
       }
     }
 
@@ -223,7 +283,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!canvas) return;
 
     const isMobile = window.innerWidth <= 760;
-    const dprCap = isMobile ? 1.5 : 2;
+    const dprCap = isMobile ? 1.4 : 2;
     const dpr = Math.min(window.devicePixelRatio || 1, dprCap);
     const cssWidth = Math.max(1, window.innerWidth);
     const cssHeight = Math.max(1, window.innerHeight);
@@ -248,14 +308,12 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       img.removeAttribute("src");
     } catch {
-      // Some embedded browsers do not allow removing an in-flight source.
+      // Safe no-op in older embedded WebViews.
     }
 
     activeLoads.delete(index);
     const entry = frameCache.get(index);
-    if (entry && entry.state === "loading") {
-      frameCache.delete(index);
-    }
+    if (entry && entry.state === "loading") frameCache.delete(index);
   }
 
   function disposeEntry(index) {
@@ -268,7 +326,7 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
         entry.img.removeAttribute("src");
       } catch {
-        // Safe no-op for older WebViews.
+        // Safe no-op in older embedded WebViews.
       }
     }
 
@@ -297,7 +355,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function pumpLoadQueue() {
     if (destroyed) return;
-
     const { concurrency } = getLoaderConfig();
 
     while (activeLoads.size < concurrency && loadQueue.length > 0) {
@@ -311,12 +368,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (existing && existing.state === "error") frameCache.delete(index);
 
       const img = new Image();
-      const entry = {
-        img,
-        state: "loading",
-        lastUsed: ++useCounter,
-      };
-
+      const entry = { img, state: "loading", lastUsed: ++useCounter };
       frameCache.set(index, entry);
       activeLoads.set(index, img);
       img.decoding = "async";
@@ -334,8 +386,8 @@ document.addEventListener("DOMContentLoaded", () => {
         currentEntry.state = "loaded";
         touchEntry(currentEntry);
 
-        // Critical: if the exact frame finishes after a fallback was painted,
-        // redraw it immediately. Never mark an unloaded target as displayed.
+        // If a fallback was painted while the exact frame was downloading,
+        // immediately replace it with the correct frame once ready.
         if (index === desiredFrame || lastDrawnFrame < 0) {
           scheduleCanvasRender(true);
         }
@@ -349,47 +401,64 @@ document.addEventListener("DOMContentLoaded", () => {
 
         activeLoads.delete(index);
         const currentEntry = frameCache.get(index);
-        if (currentEntry && currentEntry.img === img) {
-          currentEntry.state = "error";
-        }
-        console.error(`Falha ao carregar frame ${index}: ${getFramePath(index)}`);
+        if (currentEntry && currentEntry.img === img) currentEntry.state = "error";
+        console.error(`Falha ao carregar frame ${index}: ${FRAME_PATHS[index]}`);
         pumpLoadQueue();
       };
 
-      img.src = getFramePath(index);
+      img.src = FRAME_PATHS[index];
     }
   }
 
-  function buildPriorityOrder(center, radius) {
+  function buildPriorityOrder(center) {
+    const { ahead, behind } = getLoaderConfig();
     const order = [center];
+    const maxDistance = Math.max(ahead, behind);
 
-    for (let distance = 1; distance <= radius; distance += 1) {
-      const ahead = center + distance * scrollDirection;
-      const behind = center - distance * scrollDirection;
+    for (let distance = 1; distance <= maxDistance; distance += 1) {
+      if (distance <= ahead) {
+        const forward = center + distance * scrollDirection;
+        if (forward >= 0 && forward < TOTAL_FRAMES) order.push(forward);
+      }
 
-      if (ahead >= 0 && ahead < TOTAL_FRAMES) order.push(ahead);
-      if (behind >= 0 && behind < TOTAL_FRAMES) order.push(behind);
+      if (distance <= behind) {
+        const backward = center - distance * scrollDirection;
+        if (backward >= 0 && backward < TOTAL_FRAMES) order.push(backward);
+      }
     }
 
     return order;
   }
 
+  function freeSlotForExactFrame(center) {
+    const { concurrency } = getLoaderConfig();
+    const exact = frameCache.get(center);
+    if (isLoadedEntry(exact) || (exact && exact.state === "loading")) return;
+    if (activeLoads.size < concurrency) return;
+
+    const candidate = Array.from(activeLoads.keys())
+      .filter((index) => index !== center)
+      .sort((a, b) => Math.abs(b - center) - Math.abs(a - center))[0];
+
+    if (candidate !== undefined) cancelLoad(candidate);
+  }
+
   function updateLoadWindow(center) {
-    const { radius } = getLoaderConfig();
-    const priorityOrder = buildPriorityOrder(center, radius);
+    const priorityOrder = buildPriorityOrder(center);
     const nextWantedFrames = new Set(priorityOrder);
     wantedFrames = nextWantedFrames;
 
-    // Cancel obsolete queued work. The queue is rebuilt below in the new
-    // priority order, guaranteeing that the exact requested frame is first.
     loadQueue = [];
     queuedFrames.clear();
 
-    // Cancel obsolete in-flight requests so the new exact frame gets a free
-    // connection immediately instead of waiting behind frames far away.
+    // Avoid load thrashing while scrolling continuously: only cancel requests
+    // that are now far outside the useful neighborhood.
+    const cancelDistance = window.innerWidth <= 760 ? 12 : 20;
     Array.from(activeLoads.keys()).forEach((index) => {
-      if (!nextWantedFrames.has(index)) cancelLoad(index);
+      if (Math.abs(index - center) > cancelDistance) cancelLoad(index);
     });
+
+    freeSlotForExactFrame(center);
 
     priorityOrder.forEach((index) => {
       const entry = frameCache.get(index);
@@ -418,13 +487,18 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function updateActiveStep(progress) {
-    const stepIndex = progress >= 0.48 ? 1 : 0;
+    if (steps.length === 0) return;
+
+    const stepIndex = Math.min(
+      steps.length - 1,
+      Math.max(0, Math.floor(progress * steps.length)),
+    );
 
     if (stepIndex !== currentStepIndex) {
       currentStepIndex = stepIndex;
 
-      steps.forEach((step, idx) => {
-        step.classList.toggle("is-active", idx === stepIndex);
+      steps.forEach((step, index) => {
+        step.classList.toggle("is-active", index === stepIndex);
       });
 
       navLinks.forEach((link) => {
@@ -433,9 +507,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    if (cueProgress) {
-      cueProgress.style.width = `${Math.round(progress * 100)}%`;
-    }
+    if (cueProgress) cueProgress.style.width = `${Math.round(progress * 100)}%`;
   }
 
   function updateFromScroll() {
@@ -464,22 +536,25 @@ document.addEventListener("DOMContentLoaded", () => {
   navLinks.forEach((link) => {
     link.addEventListener("click", (event) => {
       const stepNavAttr = link.getAttribute("data-step-nav");
-      if (stepNavAttr === null) return;
+      if (stepNavAttr === null || steps.length === 0) return;
 
       event.preventDefault();
       const stepIdx = parseInt(stepNavAttr, 10);
       const scrollingElement = document.scrollingElement || document.documentElement;
       const maxScroll = Math.max(1, scrollingElement.scrollHeight - window.innerHeight);
-      const targetY = stepIdx === 0 ? 0 : maxScroll;
+      const denominator = Math.max(1, steps.length - 1);
+      const targetProgress = Math.max(0, Math.min(1, stepIdx / denominator));
 
       window.scrollTo({
-        top: targetY,
+        top: maxScroll * targetProgress,
         behavior: prefersReducedMotion ? "auto" : "smooth",
       });
     });
   });
 
   window.addEventListener("scroll", updateFromScroll, { passive: true });
+  window.addEventListener("wheel", updateFromScroll, { passive: true });
+  window.addEventListener("touchmove", updateFromScroll, { passive: true });
   window.addEventListener("resize", () => {
     resizeCanvas();
     updateLoadWindow(desiredFrame);
@@ -498,10 +573,15 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   resizeCanvas();
-  desiredFrame = Math.round(getScrollProgress() * (TOTAL_FRAMES - 1));
-  updateActiveStep(getScrollProgress());
+  const initialProgress = getScrollProgress();
+  desiredFrame = Math.round(initialProgress * (TOTAL_FRAMES - 1));
+  updateActiveStep(initialProgress);
   updateLoadWindow(desiredFrame);
   scheduleCanvasRender(true);
+
+  // Frame 0 is also preloaded in HTML; touching it here ensures the loader
+  // starts from the same source of truth as the complete 0..239 sequence.
+  if (scrollTrack) scrollTrack.dataset.totalFrames = String(FRAME_PATHS.length);
 
   window.addEventListener("beforeunload", () => {
     destroyed = true;
