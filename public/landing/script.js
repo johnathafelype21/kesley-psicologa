@@ -222,11 +222,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const center = Math.round(target);
     const low = Math.floor(target);
     const high = Math.min(LAST, low + 1);
-    enqueue(high, true); enqueue(low, true);
+    enqueue(low);
+    enqueue(high);
     const { ahead, behind } = cfg();
     for (let d = 1; d <= Math.max(ahead, behind); d++) {
-      if (d <= ahead) enqueue(center + d * direction, true);
-      if (d <= behind) enqueue(center - d * direction, false);
+      if (d <= ahead) enqueue(center + d * direction);
+      if (d <= behind) enqueue(center - d * direction);
     }
     pump();
   }
