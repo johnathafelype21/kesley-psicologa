@@ -1,21 +1,21 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
   const TOTAL_FRAMES = 240;
-  const FRAMES_DIR = 'assets/frames/';
-  const FRAME_PREFIX = 'frame_';
-  const FRAME_EXT = '.webp';
+  const FRAMES_DIR = "assets/frames/";
+  const FRAME_PREFIX = "frame_";
+  const FRAME_EXT = ".webp";
 
   // Ensure page starts at top on refresh/navigation
-  if ('scrollRestoration' in history) {
-    history.scrollRestoration = 'manual';
+  if ("scrollRestoration" in history) {
+    history.scrollRestoration = "manual";
   }
 
-  const canvas = document.getElementById('heroCanvas');
-  const ctx = canvas ? canvas.getContext('2d', { alpha: false }) : null;
-  const cueProgress = document.getElementById('cueProgress');
-  const steps = Array.from(document.querySelectorAll('.story-step'));
-  const navLinks = Array.from(document.querySelectorAll('[data-step-nav]'));
+  const canvas = document.getElementById("heroCanvas");
+  const ctx = canvas ? canvas.getContext("2d", { alpha: false }) : null;
+  const cueProgress = document.getElementById("cueProgress");
+  const steps = Array.from(document.querySelectorAll(".story-step"));
+  const navLinks = Array.from(document.querySelectorAll("[data-step-nav]"));
 
-  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   // Frame Cache
   const images = new Array(TOTAL_FRAMES);
@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Split-text helper for kinetic typography
   function splitTextIntoChars(element) {
     if (!element || element.dataset.splitDone) return;
-    element.dataset.splitDone = 'true';
+    element.dataset.splitDone = "true";
 
     let globalCharIndex = 0;
 
@@ -44,15 +44,15 @@ document.addEventListener('DOMContentLoaded', () => {
         words.forEach((word) => {
           if (!word) return;
           if (/^\s+$/.test(word)) {
-            fragment.appendChild(document.createTextNode(' '));
+            fragment.appendChild(document.createTextNode(" "));
           } else {
-            const wordSpan = document.createElement('span');
-            wordSpan.className = 'word';
+            const wordSpan = document.createElement("span");
+            wordSpan.className = "word";
 
             for (const char of word) {
-              const charSpan = document.createElement('span');
-              charSpan.className = 'char';
-              charSpan.style.setProperty('--char-i', globalCharIndex++);
+              const charSpan = document.createElement("span");
+              charSpan.className = "char";
+              charSpan.style.setProperty("--char-i", globalCharIndex++);
               charSpan.textContent = char;
               wordSpan.appendChild(charSpan);
             }
@@ -70,9 +70,9 @@ document.addEventListener('DOMContentLoaded', () => {
       return node.cloneNode(true);
     }
 
-    const fullText = element.textContent.replace(/\s+/g, ' ').trim();
-    if (!element.getAttribute('aria-label')) {
-      element.setAttribute('aria-label', fullText);
+    const fullText = element.textContent.replace(/\s+/g, " ").trim();
+    if (!element.getAttribute("aria-label")) {
+      element.setAttribute("aria-label", fullText);
     }
 
     const fragment = document.createDocumentFragment();
@@ -80,17 +80,17 @@ document.addEventListener('DOMContentLoaded', () => {
       fragment.appendChild(processNode(child));
     });
 
-    element.innerHTML = '';
+    element.innerHTML = "";
     element.appendChild(fragment);
   }
 
   if (!prefersReducedMotion) {
-    document.querySelectorAll('.section-title').forEach(splitTextIntoChars);
+    document.querySelectorAll(".section-title").forEach(splitTextIntoChars);
   }
 
   // Format frame filename: frame_0000.webp
   function getFramePath(index) {
-    const padIndex = String(index).padStart(4, '0');
+    const padIndex = String(index).padStart(4, "0");
     return `${FRAMES_DIR}${FRAME_PREFIX}${padIndex}${FRAME_EXT}`;
   }
 
@@ -111,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const offsetX = isMobile ? (w - drawW) * 0.75 : (w - drawW) * 0.95;
     const offsetY = (h - drawH) * 0.5;
 
-    ctx.fillStyle = '#F7F3EA';
+    ctx.fillStyle = "#F7F3EA";
     ctx.fillRect(0, 0, w, h);
     ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
   }
@@ -183,7 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const scrollHeight = Math.max(doc.scrollHeight, body.scrollHeight);
     const clientHeight = window.innerHeight || doc.clientHeight || 1;
     const maxScroll = Math.max(1, scrollHeight - clientHeight);
-    
+
     return Math.max(0, Math.min(1, scrollTop / maxScroll));
   }
 
@@ -202,18 +202,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
       steps.forEach((step, idx) => {
         if (idx === stepIndex) {
-          step.classList.add('is-active');
+          step.classList.add("is-active");
         } else {
-          step.classList.remove('is-active');
+          step.classList.remove("is-active");
         }
       });
 
       navLinks.forEach((link) => {
-        const linkStep = parseInt(link.getAttribute('data-step-nav'), 10);
+        const linkStep = parseInt(link.getAttribute("data-step-nav"), 10);
         if (linkStep === stepIndex) {
-          link.classList.add('is-active');
+          link.classList.add("is-active");
         } else {
-          link.classList.remove('is-active');
+          link.classList.remove("is-active");
         }
       });
     }
@@ -231,7 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const frameIndex = Math.min(
         TOTAL_FRAMES - 1,
-        Math.max(0, Math.round(currentProgress * (TOTAL_FRAMES - 1)))
+        Math.max(0, Math.round(currentProgress * (TOTAL_FRAMES - 1))),
       );
 
       if (frameIndex !== lastDrawnFrame) {
@@ -250,35 +250,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Smooth scroll to step on nav link click
   navLinks.forEach((link) => {
-    link.addEventListener('click', (e) => {
-      const stepNavAttr = link.getAttribute('data-step-nav');
+    link.addEventListener("click", (e) => {
+      const stepNavAttr = link.getAttribute("data-step-nav");
       if (stepNavAttr === null) return;
       e.preventDefault();
-      
+
       const stepIdx = parseInt(stepNavAttr, 10);
+
+      if (prefersReducedMotion) {
+        updateActiveStep(stepIdx);
+        return;
+      }
+
       const doc = document.documentElement;
       const scrollHeight = Math.max(doc.scrollHeight, document.body.scrollHeight);
       const maxScroll = Math.max(1, scrollHeight - window.innerHeight);
-      
+
       const targetY = stepIdx === 0 ? 0 : maxScroll;
 
       window.scrollTo({
         top: targetY,
-        behavior: 'smooth'
+        behavior: "smooth",
       });
     });
   });
 
   // Passive event listeners for desktop and mobile touch
-  window.addEventListener('scroll', updateScrollProgress, { passive: true });
-  window.addEventListener('touchmove', updateScrollProgress, { passive: true });
-  window.addEventListener('wheel', updateScrollProgress, { passive: true });
-  window.addEventListener('resize', () => {
+  window.addEventListener("scroll", updateScrollProgress, { passive: true });
+  window.addEventListener("touchmove", updateScrollProgress, { passive: true });
+  window.addEventListener("wheel", updateScrollProgress, { passive: true });
+  window.addEventListener("resize", () => {
     resizeCanvas();
     updateScrollProgress();
   });
 
-  window.addEventListener('load', () => {
+  window.addEventListener("load", () => {
     resizeCanvas();
     updateScrollProgress();
   });
@@ -287,5 +293,6 @@ document.addEventListener('DOMContentLoaded', () => {
   resizeCanvas();
   preloadFrames();
   updateScrollProgress();
+  updateActiveStep(0);
   tick();
 });
