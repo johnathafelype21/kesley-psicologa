@@ -24,11 +24,13 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   return (
-    <main className="fixed inset-0 h-dvh w-screen overflow-hidden bg-[#f7f3ea]">
+    <main className="fixed inset-0 h-dvh w-screen bg-[#f7f3ea]">
       <iframe
-        className="h-full w-full border-0"
+        className="block h-dvh w-full border-0"
         src="/landing/index.html"
         title="Kesley - Psicologia e Saude Emocional"
+        scrolling="yes"
+        style={{ touchAction: "pan-y" }}
       />
     </main>
   );
