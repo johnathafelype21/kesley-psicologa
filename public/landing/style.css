@@ -31,11 +31,9 @@ html {
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--color-bg-base);
   color: var(--color-text-primary);
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow-x: clip;
   scroll-behavior: smooth;
   touch-action: pan-y;
-  overscroll-behavior-y: auto;
 }
 
 body {
@@ -45,8 +43,7 @@ body {
   color: var(--color-text-primary);
   font-family: var(--font-sans);
   line-height: 1.5;
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow-x: clip;
   min-height: 100%;
   touch-action: pan-y;
 }
@@ -73,20 +70,20 @@ body {
 .scroll-experience {
   position: relative;
   width: 100%;
-  min-height: 700vh;
+  min-height: 200vh;
   background: var(--color-bg-base);
 }
 
 .scroll-track {
   position: relative;
-  height: 700vh;
+  height: 200vh;
   width: 100%;
   pointer-events: none;
   visibility: hidden;
 }
 
 .canvas-sticky-wrapper {
-  position: fixed;
+  position: sticky;
   top: 0;
   left: 0;
   width: 100%;
@@ -95,9 +92,8 @@ body {
   z-index: 1;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-end;
   padding-inline: clamp(22px, 6vw, 96px);
-  padding-top: clamp(20px, 3.5vh, 36px);
   padding-bottom: clamp(20px, 3.5vh, 36px);
   overflow: hidden;
   background-color: var(--color-bg-base);
@@ -131,16 +127,34 @@ body {
 }
 
 /* ========================================================================== 
-   HEADER
+   HEADER (FIXO E PERSISTENTE EM TODA A PÁGINA)
    ========================================================================== */
 .hero-header {
-  position: relative;
-  z-index: 10;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
   display: flex;
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  gap: 28px;
+  padding-inline: clamp(20px, 5vw, 80px);
+  padding-top: clamp(14px, 2vh, 22px);
+  padding-bottom: clamp(12px, 1.8vh, 18px);
+  pointer-events: none;
+  transition: background-color 0.3s ease, backdrop-filter 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.hero-header.is-scrolled {
+  background: rgba(247, 243, 234, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  border-bottom: 1px solid rgba(228, 220, 210, 0.6);
+}
+
+.hero-header > * {
   pointer-events: auto;
 }
 
@@ -235,10 +249,10 @@ body {
 }
 
 /* ========================================================================== 
-   NARRATIVE OVERLAY & 4 STORY STAGES
+   NARRATIVE OVERLAY & STORY STAGES
    ========================================================================== */
 .steps-overlay {
-  position: fixed !important;
+  position: absolute !important;
   top: 0;
   left: 0;
   width: 100%;
@@ -620,53 +634,59 @@ button:focus-visible {
   .hero-edge {
     background: linear-gradient(
       0deg,
-      rgba(247, 243, 234, 0.99) 0%,
-      rgba(247, 243, 234, 0.96) 28%,
-      rgba(247, 243, 234, 0.76) 47%,
-      rgba(247, 243, 234, 0.2) 66%,
-      transparent 78%
+      rgba(247, 243, 234, 0.95) 0%,
+      rgba(247, 243, 234, 0.82) 25%,
+      rgba(247, 243, 234, 0.35) 45%,
+      transparent 60%
     );
   }
 
   .story-step {
-    padding-inline: 18px;
-    padding-top: 72px;
-    padding-bottom: max(28px, calc(env(safe-area-inset-bottom) + 20px));
+    padding-inline: 16px;
+    padding-top: 60px;
+    padding-bottom: max(20px, calc(env(safe-area-inset-bottom) + 12px));
     align-items: flex-end;
   }
 
   .hero-editorial {
     max-width: 100%;
     width: 100%;
+    background: rgba(247, 243, 234, 0.72);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(34, 34, 34, 0.08);
+    border-radius: 18px;
+    padding: 16px 18px 18px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
   }
 
   .step-badge {
-    font-size: 9px;
-    padding: 4px 9px;
-    margin-bottom: 9px;
+    font-size: 9.5px;
+    padding: 4px 10px;
+    margin-bottom: 8px;
     letter-spacing: 0.1em;
   }
 
   .section-title {
-    max-width: 95%;
-    font-size: clamp(30px, 8.5vw, 40px);
-    line-height: 0.96;
-    letter-spacing: -0.025em;
-    margin-bottom: 11px;
+    max-width: 100%;
+    font-size: clamp(26px, 7.5vw, 34px);
+    line-height: 1.02;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
   }
 
   .section-copy {
-    max-width: 94%;
-    font-size: 13.5px;
+    max-width: 100%;
+    font-size: 13px;
     line-height: 1.45;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
   }
 
   .step-note {
-    max-width: 94%;
+    max-width: 100%;
     font-size: 11px;
     line-height: 1.38;
-    padding-top: 10px;
+    padding-top: 8px;
   }
 
   .hero-actions {
@@ -674,14 +694,18 @@ button:focus-visible {
   }
 
   .hero-btn {
-    width: min(100%, 390px);
-    padding: 13px 18px;
-    font-size: 14px;
+    width: 100%;
+    padding: 12px 18px;
+    font-size: 13.5px;
+    justify-content: center;
   }
 
   .action-subtext {
     font-size: 10.5px;
-    margin-top: 2px;
+    margin-top: 6px;
+    text-align: center;
+    display: block;
+    width: 100%;
   }
 
   .hero-footer {
@@ -734,3 +758,71 @@ button:focus-visible {
     filter: none !important;
   }
 }
+
+/* ========================================================================== 
+   STITCH SECTIONS & LUXURY EDITORIAL STYLING
+   ========================================================================== */
+.font-serif-italic {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-style: italic;
+}
+
+/* Luxury Editorial Cards & Glass */
+.editorial-glass-card {
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(228, 220, 210, 0.75);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.editorial-glass-card:hover {
+  box-shadow: 0 20px 40px -15px rgba(45, 67, 54, 0.1);
+  border-color: rgba(74, 107, 83, 0.35);
+}
+
+/* Dark Luxury Card */
+.dark-editorial-card {
+  background: linear-gradient(145deg, #17241B 0%, #111A14 100%);
+  border: 1px solid rgba(197, 220, 201, 0.15);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.35s ease;
+}
+.dark-editorial-card:hover {
+  border-color: rgba(197, 220, 201, 0.35);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.35);
+}
+
+/* 3D Tilt interactive styling */
+@media (min-width: 768px) {
+  .tilt-card {
+    transform-style: preserve-3d;
+    perspective: 1000px;
+    transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.25s ease;
+    will-change: transform;
+  }
+  .tilt-card-inner {
+    transform: translateZ(24px);
+  }
+}
+
+/* Reveal on Scroll */
+.reveal-motion {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1), transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+.reveal-motion.is-revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Details Accordion */
+details summary::-webkit-details-marker {
+  display: none;
+}
+details[open] summary svg.chevron-icon {
+  transform: rotate(180deg);
+}
+

@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kesley Lilian - Guia de Psicoeducação & Método TCC</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            linen: '#FAF8F5',
+            sand: {
+              soft: '#F4EFEB',
+              warm: '#EAE2D9',
+              border: '#D7C7B7'
+            },
+            moss: {
+              DEFAULT: '#4A6B53',
+              light: '#628B6D',
+              pale: '#E3EDE5'
+            },
+            pine: {
+              DEFAULT: '#2E4936',
+              dark: '#1C3123',
+              deep: '#182B1F'
+            },
+            bark: '#3D3833',
+            charcoal: '#1A1C1A'
+          },
+          fontFamily: {
+            serif: ['"Cormorant Garamond"', 'serif'],
+            sans: ['"Plus Jakarta Sans"', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    html {
+      scroll-behavior: smooth;
+    }
+    ::selection {
+      background-color: #E3EDE5;
+      color: #2E4936;
+    }
+    .custom-shadow {
+      box-shadow: 0 10px 30px -10px rgba(61, 56, 51, 0.05), 0 4px 12px -4px rgba(61, 56, 51, 0.03);
+    }
+    .custom-shadow-hover:hover {
+      box-shadow: 0 16px 36px -12px rgba(46, 73, 54, 0.12), 0 6px 16px -6px rgba(46, 73, 54, 0.06);
+    }
+    details summary::-webkit-details-marker {
+      display: none;
+    }
+  </style>
+</head>
+<body class="bg-linen text-bark font-sans antialiased selection:bg-moss-pale selection:text-pine min-h-screen flex flex-col justify-between">
+
+  <!-- TOP CONFIDENTIAL ETHICAL BAR -->
+  <aside class="w-full bg-[#F3EFE9] border-b border-sand-border/60 py-2 px-4 text-xs tracking-wide text-bark/80">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left">
+      <div class="flex items-center gap-2">
+        <span class="inline-block w-2 h-2 rounded-full bg-moss animate-pulse"></span>
+        <span>Atendimento Psicológico em conformidade com o Código de Ética Profissional (CFP) • <strong>CRP 04/78779</strong></span>
+      </div>
+      <div class="flex items-center gap-4 text-[11px] font-medium text-bark/70">
+        <span>Presencial em Contagem/MG & Online para todo o Brasil</span>
+        <span class="hidden md:inline">•</span>
+        <span class="hidden md:inline">Ambiente confidencial com sigilo garantido</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- 1. HEADER NAVIGATION -->
+  <header class="sticky top-0 z-50 bg-linen/90 backdrop-blur-md border-b border-sand-border/70 transition-all duration-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      
+      <!-- Brand Logo -->
+      <a href="/landing/index.html" class="flex items-center gap-3 group">
+        <div class="w-10 h-10 rounded-full bg-sand-soft border border-sand-border flex items-center justify-center text-pine font-serif font-semibold text-lg tracking-wider group-hover:bg-moss-pale group-hover:border-moss transition-colors">
+          KL
+        </div>
+        <div class="flex flex-col">
+          <span class="font-serif text-lg font-bold tracking-wider text-charcoal uppercase leading-tight">Kesley Lilian</span>
+          <span class="text-[10px] tracking-[0.2em] font-medium text-moss uppercase">Psicologia Clínica & TCC</span>
+        </div>
+      </a>
+
+      <!-- Desktop Nav -->
+      <nav class="hidden md:flex items-center gap-6 text-xs font-semibold uppercase tracking-wider text-bark/80">
+        <a href="/landing/index.html" class="hover:text-pine transition-colors py-1">Início</a>
+        <a href="/landing/como-funciona.html" class="text-pine font-bold border-b-2 border-moss py-1">Como Funciona (TCC)</a>
+        <a href="/landing/index.html#espaco" class="hover:text-pine transition-colors py-1">O Espaço</a>
+        <a href="/landing/index.html#demandas" class="hover:text-pine transition-colors py-1">Atuação</a>
+        <a href="/landing/agendamento.html" class="hover:text-pine transition-colors py-1">Triagem Online</a>
+      </nav>
+
+      <!-- Action Button -->
+      <div class="flex items-center gap-3">
+        <a href="/landing/agendamento.html" class="inline-flex items-center justify-center px-5 py-2.5 rounded-full bg-pine hover:bg-pine-dark text-linen text-xs font-semibold uppercase tracking-wider transition-all duration-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 group">
+          <span>Agendar Consulta</span>
+          <svg class="w-3.5 h-3.5 ml-2 transition-transform duration-200 group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+          </svg>
+        </a>
+        <a href="https://wa.me/5531991688059" target="_blank" rel="noopener noreferrer" class="p-2.5 rounded-full bg-sand-soft border border-sand-border hover:border-moss hover:bg-moss-pale text-pine transition-colors" aria-label="Contato direto no WhatsApp">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.861.174.086.275.073.376-.044.101-.116.433-.506.549-.68.116-.173.231-.145.39-.086.159.058 1.011.477 1.184.564.173.086.289.13.332.202.043.072.043.419-.101.824z"/>
+          </svg>
+        </a>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT CONTAINER -->
+  <main class="flex-grow">
+
+    <!-- 2. HERO SECTION -->
+    <section class="relative pt-14 pb-20 sm:pt-20 sm:pb-28 overflow-hidden">
+      <!-- Ambient organic background accents -->
+      <div class="absolute top-10 right-1/4 w-96 h-96 bg-moss-pale/40 rounded-full blur-3xl pointer-events-none -z-10"></div>
+      <div class="absolute -bottom-10 left-1/3 w-80 h-80 bg-sand-warm/60 rounded-full blur-3xl pointer-events-none -z-10"></div>
+
+      <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <!-- Badge -->
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-moss-pale text-pine text-xs font-semibold tracking-wider uppercase mb-6 border border-moss/20">
+          <svg class="w-3.5 h-3.5 text-moss" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+          </svg>
+          <span>Psicoeducação & Método Clínico</span>
+        </div>
+
+        <!-- Headline -->
+        <h1 class="font-serif text-4xl sm:text-5xl lg:text-6xl text-charcoal font-semibold tracking-tight leading-[1.15] mb-6">
+          Como a Psicoterapia e a TCC <br class="hidden sm:inline">
+          <span class="italic font-normal text-pine">transformam sua rotina e emoções</span>
+        </h1>
+
+        <!-- Empathetic Subtext -->
+        <p class="text-base sm:text-lg text-bark/85 max-w-3xl mx-auto leading-relaxed mb-10 font-normal">
+          A Terapia Cognitivo-Comportamental não é um monólogo abstrato. É uma jornada <strong>colaborativa, ativa e cientificamente fundamentada</strong>, onde psicóloga e paciente trabalham lado a lado para identificar padrões automáticos de pensamento, regular reações emocionais e construir novas respostas práticas para o seu dia a dia.
+        </p>
+
+        <!-- Quick Credentials Pill row -->
+        <div class="flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-xs text-bark/80 font-medium mb-12">
+          <div class="flex items-center gap-2 px-3.5 py-2 rounded-full bg-sand-soft border border-sand-border/80">
+            <span class="w-1.5 h-1.5 rounded-full bg-moss"></span>
+            <span>Comprovada por Evidências Científicas</span>
+          </div>
+          <div class="flex items-center gap-2 px-3.5 py-2 rounded-full bg-sand-soft border border-sand-border/80">
+            <span class="w-1.5 h-1.5 rounded-full bg-moss"></span>
+            <span>Foco no Presente & Resolução Prática</span>
+          </div>
+          <div class="flex items-center gap-2 px-3.5 py-2 rounded-full bg-sand-soft border border-sand-border/80">
+            <span class="w-1.5 h-1.5 rounded-full bg-moss"></span>
+            <span>Desenvolvimento de Autonomia Duradoura</span>
+          </div>
+        </div>
+
+        <!-- Editorial Visual Showcase Card -->
+        <div class="relative rounded-3xl overflow-hidden shadow-2xl border border-sand-border max-w-4xl mx-auto h-[260px] sm:h-[360px] group">
+          <img src="/landing/assets/jornada-transformacao.jpg" alt="Acolhimento Terapêutico e Transformação" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+          <div class="absolute inset-0 bg-gradient-to-t from-charcoal/80 via-charcoal/25 to-transparent"></div>
+          
+          <div class="absolute bottom-6 left-6 right-6 sm:bottom-8 sm:left-8 sm:right-8 flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 text-left">
+            <div>
+              <span class="text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-moss-pale block mb-1">Espaço & Método</span>
+              <p class="font-serif text-lg sm:text-2xl text-linen font-normal leading-snug max-w-xl">
+                “A psicoterapia é a oportunidade de revisitar sua própria história com gentileza e clareza científica.”
+              </p>
+            </div>
+            <a href="/landing/agendamento.html" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-linen/95 hover:bg-white text-pine text-xs font-semibold uppercase tracking-wider backdrop-blur transition-all shadow-md flex-shrink-0">
+              <span>Agendar Triagem</span>
+              <svg class="w-3.5 h-3.5 text-moss" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+              </svg>
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 3. O QUE É A TCC (A TRÍADE COGNITIVA & PILARES CIENTÍFICOS) -->
+    <section id="o-que-e-tcc" class="py-16 sm:py-24 bg-sand-soft/50 border-y border-sand-border/50 relative">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Section Header -->
+        <div class="text-center max-w-3xl mx-auto mb-16">
+          <span class="text-xs font-bold uppercase tracking-[0.2em] text-moss block mb-2">Fundamento Científico</span>
+          <h2 class="font-serif text-3xl sm:text-4xl text-charcoal font-semibold mb-4">
+            O que é a Terapia Cognitivo-Comportamental?
+          </h2>
+          <p class="text-bark/80 text-base leading-relaxed">
+            Desenvolvida pelo Dr. Aaron Beck, a TCC parte do princípio de que <em>não são as situações em si que nos perturbam, mas a forma como as interpretamos</em>. Ao compreender e intervir nesse ciclo, você recupera a clareza e o equilíbrio.
+          </p>
+        </div>
+
+        <!-- The Cognitive Triad Visual Diagram (Interactive & Conceptual) -->
+        <div id="triade-cognitiva" class="mb-16 p-8 sm:p-12 rounded-2xl bg-linen border border-sand-border custom-shadow">
+          <div class="max-w-4xl mx-auto">
+            <div class="text-center mb-10">
+              <span class="inline-block px-3 py-1 rounded-full bg-sand-warm text-bark text-xs font-semibold uppercase tracking-wider mb-2">Conceito Central</span>
+              <h3 class="font-serif text-2xl sm:text-3xl text-pine font-semibold">O Ciclo da Tríade Cognitiva</h3>
+              <p class="text-sm text-bark/70 mt-1">Como seus pensamentos, sensações corporais e atitudes se conectam continuamente:</p>
+            </div>
+
+            <!-- 3 Columns Interconnected -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
+              
+              <!-- Card 1: Pensamentos -->
+              <div class="p-6 rounded-2xl bg-sand-soft border border-sand-border relative flex flex-col justify-between transition-all hover:border-moss group">
+                <div class="w-10 h-10 rounded-full bg-moss-pale text-pine flex items-center justify-center font-serif text-lg font-bold mb-4 group-hover:bg-moss group-hover:text-linen transition-colors">
+                  1
+                </div>
+                <div>
+                  <h4 class="font-serif text-xl font-bold text-charcoal mb-2">Pensamentos</h4>
+                  <p class="text-xs font-semibold text-moss uppercase tracking-wider mb-2">Interpretação da Realidade</p>
+                  <p class="text-sm text-bark/80 leading-relaxed">
+                    Pensamentos automáticos e crenças que surgem diante de um evento ("Não vou conseguir", "Todos estão me julgando").
+                  </p>
+                </div>
+                <div class="mt-4 pt-4 border-t border-sand-border/60 text-xs text-bark/60 italic">
+                  Gera impacto direto em...
+                </div>
+              </div>
+
+              <!-- Card 2: Emoções & Fisiologia -->
+              <div class="p-6 rounded-2xl bg-sand-soft border border-sand-border relative flex flex-col justify-between transition-all hover:border-moss group">
+                <div class="w-10 h-10 rounded-full bg-moss-pale text-pine flex items-center justify-center font-serif text-lg font-bold mb-4 group-hover:bg-moss group-hover:text-linen transition-colors">
+                  2
+                </div>
+                <div>
+                  <h4 class="font-serif text-xl font-bold text-charcoal mb-2">Emoções & Corpo</h4>
+                  <p class="text-xs font-semibold text-moss uppercase tracking-wider mb-2">Repercussão Emocional</p>
+                  <p class="text-sm text-bark/80 leading-relaxed">
+                    Ansiedade, aperto no peito, desânimo, tensão muscular e batimentos acelerados decorrentes de como você avaliou o momento.
+                  </p>
+                </div>
+                <div class="mt-4 pt-4 border-t border-sand-border/60 text-xs text-bark/60 italic">
+                  Que influencia seu...
+                </div>
+              </div>
+
+              <!-- Card 3: Comportamentos -->
+              <div class="p-6 rounded-2xl bg-sand-soft border border-sand-border relative flex flex-col justify-between transition-all hover:border-moss group">
+                <div class="w-10 h-10 rounded-full bg-moss-pale text-pine flex items-center justify-center font-serif text-lg font-bold mb-4 group-hover:bg-moss group-hover:text-linen transition-colors">
+                  3
+                </div>
+                <div>
+                  <h4 class="font-serif text-xl font-bold text-charcoal mb-2">Comportamentos</h4>
+                  <p class="text-xs font-semibold text-moss uppercase tracking-wider mb-2">Ação ou Esquiva</p>
+                  <p class="text-sm text-bark/80 leading-relaxed">
+                    Procrastinar uma decisão, evitar conversas difíceis, isolar-se ou reagir com agressividade, reforçando o ciclo de sofrimento.
+                  </p>
+                </div>
+                <div class="mt-4 pt-4 border-t border-sand-border/60 text-xs text-bark/60 italic">
+                  Que confirma os pensamentos.
+                </div>
+              </div>
+
+            </div>
+
+            <div class="mt-8 p-4 rounded-xl bg-moss-pale/60 border border-moss/20 text-center text-xs text-pine font-medium max-w-2xl mx-auto">
+              💡 <strong>O papel da Dra. Kesley Lilian:</strong> Auxiliar você a pausar, reconhecer as distorções desse ciclo e construir alternativas cognitivas e comportamentais mais funcionais e equilibradas.
+            </div>
+
+          </div>
+        </div>
+
+        <!-- 3 Pilar Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          
+          <div class="p-8 rounded-2xl bg-linen border border-sand-border custom-shadow custom-shadow-hover transition-all">
+            <div class="w-12 h-12 rounded-xl bg-moss-pale text-pine flex items-center justify-center mb-6">
+              <svg class="w-6 h-6 text-moss" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+              </svg>
+            </div>
+            <h3 class="font-serif text-2xl font-bold text-charcoal mb-3">Eficácia Baseada em Evidências</h3>
+            <p class="text-sm text-bark/80 leading-relaxed">
+              Padrão-ouro mundial para o tratamento de ansiedade, estresse crônico, depressão, burnout e dificuldades de relacionamento, com protocolos validados em neurociência e psicologia experimental.
+            </p>
+          </div>
+
+          <div class="p-8 rounded-2xl bg-linen border border-sand-border custom-shadow custom-shadow-hover transition-all">
+            <div class="w-12 h-12 rounded-xl bg-moss-pale text-pine flex items-center justify-center mb-6">
+              <svg class="w-6 h-6 text-moss" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+              </svg>
+            </div>
+            <h3 class="font-serif text-2xl font-bold text-charcoal mb-3">Empirismo Colaborativo</h3>
+            <p class="text-sm text-bark/80 leading-relaxed">
+              Você não é um mero espectador. O processo terapêutico é construído em parceria: nós investigamos juntos a validade de suas crenças e testamos novas hipóteses com gentileza e rigor.
+            </p>
+          </div>
+
+          <div class="p-8 rounded-2xl bg-linen border border-sand-border custom-shadow custom-shadow-hover transition-all">
+            <div class="w-12 h-12 rounded-xl bg-moss-pale text-pine flex items-center justify-center mb-6">
+              <svg class="w-6 h-6 text-moss" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+              </svg>
+            </div>
+            <h3 class="font-serif text-2xl font-bold text-charcoal mb-3">Foco em Autonomia & Alta</h3>
+            <p class="text-sm text-bark/80 leading-relaxed">
+              A terapia tem início, meio e previsão de alta. O objetivo principal é torná-lo o seu próprio terapeuta, munido de recursos internos para sustentar seu bem-estar pelo resto da vida.
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 4. AS 4 FASES DA JORNADA TERAPÊUTICA (TIMELINE DETALHADA) -->
+    <section id="fases-jornada" class="py-16 sm:py-28 relative">
+      <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div class="text-center max-w-2xl mx-auto mb-16 sm:mb-20">
+          <span class="text-xs font-bold uppercase tracking-[0.2em] text-moss block mb-2">Clareza & Previsibilidade</span>
+          <h2 class="font-serif text-3xl sm:text-4xl text-charcoal font-semibold mb-4">
+            As 4 Fases da Jornada Terapêutica
+          </h2>
+          <p class="text-bark/80 text-base leading-relaxed">
+            Saber o que esperar de cada etapa diminui a ansiedade natural de iniciar o processo. Conheça a metodologia estruturada com a Dra. Kesley Lilian:
+          </p>
+        </div>
+
+        <!-- Vertical Interactive Timeline -->
+        <div class="relative">
+          <!-- Central Line -->
+          <div class="hidden md:block absolute left-1/2 -translate-x-1/2 top-8 bottom-8 w-[2px] bg-sand-border"></div>
+
+          <div class="space-y-12 sm:space-y-16">
+            
+            <!-- FASE 1 -->
+            <div class="relative flex flex-col md:flex-row items-center md:items-start gap-8 group">
+              <!-- Content Card Left -->
+              <div class="w-full md:w-1/2 md:text-right order-2 md:order-1">
+                <div class="p-6 sm:p-8 rounded-2xl bg-sand-soft border border-sand-border custom-shadow custom-shadow-hover transition-all">
+                  <div class="inline-block md:hidden px-3 py-1 rounded-full bg-moss-pale text-pine text-xs font-bold uppercase tracking-wider mb-2">Fase 1</div>
+                  <h3 class="font-serif text-2xl font-bold text-pine mb-2">Acolhimento & Avaliação Inicial</h3>
+                  <p class="text-xs font-semibold text-moss uppercase tracking-wider mb-3">Sessões 1 a 3 • Escuta Segura</p>
+                  <p class="text-sm text-bark/85 leading-relaxed">
+                    Um espaço seguro para você desabafar sem pressa e sem julgamentos. Compreendemos a queixa principal (ansiedade, esgotamento, relacionamento), seu histórico de vida, sintomas físicos e momentos em que o sofrimento se intensifica.
+                  </p>
+                  <ul class="mt-4 space-y-1.5 text-xs text-bark/75 md:inline-block text-left">
+                    <li class="flex items-center gap-2">
+                      <span class="w-1.5 h-1.5 rounded-full bg-moss"></span>
+                      <span>Mapeamento dos gatilhos imediatos</span>
+                    </li>
+                    <li class="flex items-center gap-2">
+                      <span class="w-1.5 h-1.5 rounded-full bg-moss"></span>
+                      <span>Estabelecimento de aliança terapêutica sólida</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- Node Center -->
+              <div class="relative z-10 flex-shrink-0 w-12 h-12 rounded-full bg-pine text-linen font-serif font-bold text-xl flex items-center justify-center border-4 border-linen shadow-md order-1 md:order-2">
+                1
+              </div>
+
+              <!-- Visual Card Right for symmetry on Desktop -->
+              <div class="hidden md:block w-1/2 order-3 pl-8 self-center">
+                <div class="p-4 rounded-2xl bg-linen border border-sand-border shadow-soft overflow-hidden">
+                  <div class="h-32 rounded-xl overflow-hidden mb-3 border border-sand-border/50">
+                    <img src="/landing/assets/detalhes-acolhimento.jpg" alt="Acolhimento e Diálogo Terapêutico" class="w-full h-full object-cover" />
+                  </div>
+                  <span class="text-xs font-serif italic text-bark/80 block leading-snug">"O primeiro passo é ser compreendido em sua dor com genuína empatia e ausência de julgamentos."</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- FASE 2 -->
+            <div class="relative flex flex-col md:flex-row items-center md:items-start gap-8 group">
+              <!-- Empty Left for symmetry on Desktop -->
+              <div class="hidden md:block w-1/2 md:text-right pr-8 self-center order-1">
+                <span class="text-xs font-serif italic text-bark/60 text-lg">"Clareza de rota: transformamos desconfortos vagos em metas alcançáveis e mensuráveis."</span>
+              </div>
+
+              <!-- Node Center -->
+              <div class="relative z-10 flex-shrink-0 w-12 h-12 rounded-full bg-pine text-linen font-serif font-bold text-xl flex items-center justify-center border-4 border-linen shadow-md order-1 md:order-2">
+                2
+              </div>
+
+              <!-- Content Card Right -->
+              <div class="w-full md:w-1/2 order-2 md:order-3">
+                <div class="p-6 sm:p-8 rounded-2xl bg-sand-soft border border-sand-border custom-shadow custom-shadow-hover transition-all">
+                  <div class="inline-block md:hidden px-3 py-1 rounded-full bg-moss-pale text-pine text-xs font-bold uppercase tracking-wider mb-2">Fase 2</div>
+                  <h3 class="font-serif text-2xl font-bold text-pine mb-2">Conceituação Cognitiva & Metas</h3>
+                  <p class="text-xs font-semibold text-moss uppercase tracking-wider mb-3">Sessões 4 a 6 • Desenho do Plano</p>
+                  <p class="text-sm text-bark/85 leading-relaxed">
+                    Unimos as peças do quebra-cabeça: identificamos as regras e crenças centrais sobre si mesmo e o mundo ("Preciso ser perfeito para ter valor"). Traçamos metas objetivas e mensuráveis para nortear o tratamento.
+                  </p>
+                  <ul class="mt-4 space-y-1.5 text-xs text-bark/75">
+                    <li class="flex items-center gap-2">
+                      <span class="w-1.5 h-1.5 rounded-full bg-moss"></span>
+                      <span>Formulação compartilhada do seu caso</span>
+                    </li>
+                    <li class="flex items-center gap-2">
+                      <span class="w-1.5 h-1.5 rounded-full bg-moss"></span>
+                      <span>Acordo sobre o foco terapêutico prioritário</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <!-- FASE 3 -->
+            <div class="relative flex flex-col md:flex-row items-center md:items-start gap-8 group">
+              <!-- Content Card Left -->
+              <div class="w-full md:w-1/2 md:text-right order-2 md:order-1">
+                <div class="p-6 sm:p-8 rounded-2xl bg-sand-soft border border-sand-border custom-shadow custom-shadow-hover transition-all">
+                  <div class="inline-block md:hidden px-3 py-1 rounded-full bg-moss-pale text-pine text-xs font-bold uppercase tracking-wider mb-2">Fase 3</div>
+                  <h3 class="font-serif text-2xl font-bold text-pine mb-2">Intervenções & Ferramentas Práticas</h3>
+                  <p class="text-xs font-semibold text-moss uppercase tracking-wider mb-3">Fase Ativa de Transformação</p>
+                  <p class="text-sm text-bark/85 leading-relaxed">
+                    É onde a mudança real acontece. Aplicamos técnicas de reestruturação cognitiva, registro de pensamentos disfuncionais (RPD), regulação emocional, treino de assertividade e experimentos comportamentais seguros entre as sessões.
+                  </p>
+                  <ul class="mt-4 space-y-1.5 text-xs text-bark/75 md:inline-block text-left">
+                    <li class="flex items-center gap-2">
+                      <span class="w-1.5 h-1.5 rounded-full bg-moss"></span>
+                      <span>Exercícios práticos para aplicar na sua rotina</span>
+                    </li>
+                    <li class="flex items-center gap-2">
+                      <span class="w-1.5 h-1.5 rounded-full bg-moss"></span>
+                      <span>Redução progressiva da intensidade dos sintomas</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- Node Center -->
+              <div class="relative z-10 flex-shrink-0 w-12 h-12 rounded-full bg-pine text-linen font-serif font-bold text-xl flex items-center justify-center border-4 border-linen shadow-md order-1 md:order-2">
+                3
+              </div>
+
+              <!-- Visual Card Right for symmetry on Desktop -->
+              <div class="hidden md:block w-1/2 order-3 pl-8 self-center">
+                <div class="p-4 rounded-2xl bg-linen border border-sand-border shadow-soft overflow-hidden">
+                  <div class="h-32 rounded-xl overflow-hidden mb-3 border border-sand-border/50">
+                    <img src="/landing/assets/consultorio-sereno.jpg" alt="Consultório e Espaço Terapêutico" class="w-full h-full object-cover" />
+                  </div>
+                  <span class="text-xs font-serif italic text-bark/80 block leading-snug">"Você não apenas conversa: você adquire um repertório de ferramentas e recursos internos para a vida inteira."</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- FASE 4 -->
+            <div class="relative flex flex-col md:flex-row items-center md:items-start gap-8 group">
+              <!-- Empty Left for symmetry on Desktop -->
+              <div class="hidden md:block w-1/2 md:text-right pr-8 self-center order-1">
+                <span class="text-xs font-serif italic text-bark/60 text-lg">"A consolidação do autocuidado consciente para você voar sozinho."</span>
+              </div>
+
+              <!-- Node Center -->
+              <div class="relative z-10 flex-shrink-0 w-12 h-12 rounded-full bg-moss text-linen font-serif font-bold text-xl flex items-center justify-center border-4 border-linen shadow-md order-1 md:order-2">
+                4
+              </div>
+
+              <!-- Content Card Right -->
+              <div class="w-full md:w-1/2 order-2 md:order-3">
+                <div class="p-6 sm:p-8 rounded-2xl bg-sand-soft border border-sand-border custom-shadow custom-shadow-hover transition-all">
+                  <div class="inline-block md:hidden px-3 py-1 rounded-full bg-moss-pale text-pine text-xs font-bold uppercase tracking-wider mb-2">Fase 4</div>
+                  <h3 class="font-serif text-2xl font-bold text-pine mb-2">Prevenção de Recaídas & Alta Clínica</h3>
+                  <p class="text-xs font-semibold text-moss uppercase tracking-wider mb-3">Espaçamento & Consolidação</p>
+                  <p class="text-sm text-bark/85 leading-relaxed">
+                    À medida que você consolida os ganhos, as sessões tornam-se quinzenais ou mensais. Mapeamos potenciais vulnerabilidades futuras e montamos um plano de ação para que eventuais recaídas sejam manejadas com naturalidade e segurança.
+                  </p>
+                  <ul class="mt-4 space-y-1.5 text-xs text-bark/75">
+                    <li class="flex items-center gap-2">
+                      <span class="w-1.5 h-1.5 rounded-full bg-moss"></span>
+                      <span>Celebração dos avanços e autonomia</span>
+                    </li>
+                    <li class="flex items-center gap-2">
+                      <span class="w-1.5 h-1.5 rounded-full bg-moss"></span>
+                      <span>Alta ética e sustentável</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 5. DÚVIDAS FREQUENTES, SIGILO & REEMBOLSO MÉDICO (ACCORDION) -->
+    <section id="duvidas-faq" class="py-16 sm:py-24 bg-sand-soft/60 border-t border-sand-border/70">
+      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div class="text-center mb-16">
+          <span class="text-xs font-bold uppercase tracking-[0.2em] text-moss block mb-2">Transparência & Acolhimento</span>
+          <h2 class="font-serif text-3xl sm:text-4xl text-charcoal font-semibold mb-4">
+            Dúvidas Frequentes sobre a 1ª Sessão
+          </h2>
+          <p class="text-bark/80 text-base leading-relaxed">
+            Informações claras sobre o formato dos atendimentos, sigilo ético absoluto e como utilizar seu plano de saúde via reembolso.
+          </p>
+        </div>
+
+        <div class="space-y-4">
+          
+          <!-- Accordion 1: Duração da Sessão -->
+          <details class="group rounded-2xl bg-linen border border-sand-border p-6 transition-all duration-200 open:bg-linen open:border-moss/40 custom-shadow">
+            <summary class="flex items-center justify-between cursor-pointer list-none">
+              <span class="font-serif text-xl sm:text-2xl font-bold text-pine flex items-center gap-3">
+                <span class="w-2.5 h-2.5 rounded-full bg-moss inline-block"></span>
+                Qual é a duração de cada sessão?
+              </span>
+              <span class="w-8 h-8 rounded-full bg-sand-soft border border-sand-border flex items-center justify-center text-pine group-open:rotate-180 transition-transform duration-200">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </span>
+            </summary>
+            <div class="mt-4 pt-4 border-t border-sand-border/60 text-bark/85 text-sm sm:text-base leading-relaxed">
+              Cada sessão possui duração de <strong>50 minutos</strong> dedicados integralmente à sua escuta. Esse tempo é rigorosamente preservado para que possamos avaliar o período entre as sessões, aprofundar nas técnicas da TCC e acordar os próximos passos sem pressa e com acolhimento.
+            </div>
+          </details>
+
+          <!-- Accordion 2: Frequência Recomendada -->
+          <details class="group rounded-2xl bg-linen border border-sand-border p-6 transition-all duration-200 open:bg-linen open:border-moss/40 custom-shadow">
+            <summary class="flex items-center justify-between cursor-pointer list-none">
+              <span class="font-serif text-xl sm:text-2xl font-bold text-pine flex items-center gap-3">
+                <span class="w-2.5 h-2.5 rounded-full bg-moss inline-block"></span>
+                Qual é a frequência inicial recomendada?
+              </span>
+              <span class="w-8 h-8 rounded-full bg-sand-soft border border-sand-border flex items-center justify-center text-pine group-open:rotate-180 transition-transform duration-200">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </span>
+            </summary>
+            <div class="mt-4 pt-4 border-t border-sand-border/60 text-bark/85 text-sm sm:text-base leading-relaxed">
+              No início do processo (Fases 1 e 2), recomenda-se a <strong>frequência semanal</strong>. Isso garante a continuidade necessária para o alívio rápido dos sintomas mais agudos e a consolidação dos novos hábitos de pensamento. Posteriormente, na fase de manutenção e alta, os encontros tornam-se quinzenais.
+            </div>
+          </details>
+
+          <!-- Accordion 3: Sigilo Ético (CFP) -->
+          <details class="group rounded-2xl bg-linen border border-sand-border p-6 transition-all duration-200 open:bg-linen open:border-moss/40 custom-shadow">
+            <summary class="flex items-center justify-between cursor-pointer list-none">
+              <span class="font-serif text-xl sm:text-2xl font-bold text-pine flex items-center gap-3">
+                <span class="w-2.5 h-2.5 rounded-full bg-moss inline-block"></span>
+                Como funciona o Sigilo Profissional e a Confidencialidade?
+              </span>
+              <span class="w-8 h-8 rounded-full bg-sand-soft border border-sand-border flex items-center justify-center text-pine group-open:rotate-180 transition-transform duration-200">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </span>
+            </summary>
+            <div class="mt-4 pt-4 border-t border-sand-border/60 text-bark/85 text-sm sm:text-base leading-relaxed space-y-2">
+              <p>
+                O sigilo é <strong>absoluto e protegido pelo Art. 9º do Código de Ética Profissional do Psicólogo (CFP)</strong>. Absolutamente nada do que é compartilhado em sessão — seja na modalidade presencial em Contagem/MG ou nas sessões online por videoconferência criptografada — é exposto a terceiros, familiares ou empregadores.
+              </p>
+              <p class="text-xs text-bark/70">
+                Dra. Kesley Lilian da Silva Faria de Souza • Registro Ativo CRP 04/78779.
+              </p>
+            </div>
+          </details>
+
+          <!-- Accordion 4: Recibo para Reembolso Médico no Convênio -->
+          <details class="group rounded-2xl bg-linen border border-sand-border p-6 transition-all duration-200 open:bg-linen open:border-moss/40 custom-shadow">
+            <summary class="flex items-center justify-between cursor-pointer list-none">
+              <span class="font-serif text-xl sm:text-2xl font-bold text-pine flex items-center gap-3">
+                <span class="w-2.5 h-2.5 rounded-full bg-moss inline-block"></span>
+                Posso solicitar reembolso ao meu plano de saúde (convênio)?
+              </span>
+              <span class="w-8 h-8 rounded-full bg-sand-soft border border-sand-border flex items-center justify-center text-pine group-open:rotate-180 transition-transform duration-200">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </span>
+            </summary>
+            <div class="mt-4 pt-4 border-t border-sand-border/60 text-bark/85 text-sm sm:text-base leading-relaxed space-y-3">
+              <p>
+                <strong>Sim!</strong> Os atendimentos são particulares, porém a maioria dos planos de saúde (Bradesco Saúde, SulAmérica, Amil, Unimed, Porto Seguro, entre outros) oferece a modalidade de <em>Livre Escolha com Reembolso</em>.
+              </p>
+              <div class="p-4 rounded-xl bg-sand-soft border border-sand-border text-xs sm:text-sm text-bark/80 space-y-2">
+                <p class="font-semibold text-pine">Como funciona o processo de reembolso:</p>
+                <ol class="list-decimal list-inside space-y-1 text-bark/75">
+                  <li>Após cada sessão ou fechamento mensal, você recebe um <strong>Recibo / Nota Fiscal Oficial</strong> detalhado, contendo o nome completo da psicóloga, número de registro no CRP 04/78779 e CPF/CNPJ.</li>
+                  <li>Você anexa o documento diretamente no aplicativo do seu convênio.</li>
+                  <li>O plano realiza a devolução do valor conforme a tabela contratada da sua apólice.</li>
+                </ol>
+              </div>
+            </div>
+          </details>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 6. CTA DE AGENDAMENTO (DEEP FOREST CARD) -->
+    <section class="py-16 sm:py-24">
+      <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div class="rounded-3xl bg-pine p-8 sm:p-14 text-linen relative overflow-hidden custom-shadow">
+          <!-- Background botanical subtle gradient -->
+          <div class="absolute -right-20 -bottom-20 w-80 h-80 bg-moss/30 rounded-full blur-3xl pointer-events-none"></div>
+          <div class="absolute -left-20 -top-20 w-72 h-72 bg-pine-dark rounded-full blur-2xl pointer-events-none"></div>
+
+          <div class="relative z-10 max-w-2xl">
+            <span class="inline-block px-3.5 py-1 rounded-full bg-moss/40 text-linen/90 text-xs font-semibold uppercase tracking-wider mb-4 border border-linen/20">
+              Inicie Seu Processo Terapêutico
+            </span>
+            <h2 class="font-serif text-3xl sm:text-4xl lg:text-5xl font-semibold mb-4 leading-tight">
+              Dê o primeiro passo para o seu <span class="italic font-normal text-moss-pale">cuidado emocional</span>
+            </h2>
+            <p class="text-linen/85 text-sm sm:text-base leading-relaxed mb-8 font-light">
+              Não é preciso esperar o sofrimento se tornar insustentável para buscar apoio. Escolha o formato mais confortável para você (online ou presencial) e preencha uma breve triagem inicial confidencial.
+            </p>
+
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+              <a href="/landing/agendamento.html" class="inline-flex items-center justify-center px-8 py-4 rounded-full bg-linen hover:bg-sand-warm text-pine font-semibold text-sm sm:text-base transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5 group">
+                <span>Agendar Consulta & Triagem</span>
+                <svg class="w-4 h-4 ml-2.5 transition-transform duration-200 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                </svg>
+              </a>
+
+              <a href="https://wa.me/5531991688059" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center px-6 py-4 rounded-full bg-pine-dark/60 hover:bg-pine-dark border border-linen/20 text-linen font-medium text-sm transition-colors">
+                <svg class="w-4 h-4 mr-2 text-moss-light" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.861.174.086.275.073.376-.044.101-.116.433-.506.549-.68.116-.173.231-.145.39-.086.159.058 1.011.477 1.184.564.173.086.289.13.332.202.043.072.043.419-.101.824z"/>
+                </svg>
+                <span>Tirar Dúvida no WhatsApp</span>
+              </a>
+            </div>
+
+            <div class="mt-8 flex items-center gap-2 text-xs text-linen/60 font-light">
+              <svg class="w-4 h-4 text-moss-light" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+              </svg>
+              <span>Sem cobrança antecipada no formulário de triagem. Resposta cordial em poucas horas.</span>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 7. FOOTER & EMERGENCY DISCLAIMER -->
+  <footer class="bg-[#F4EFEB] border-t border-sand-border pt-12 pb-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <!-- Emergency disclaimer box -->
+      <div class="p-4 rounded-xl bg-linen border border-sand-border/80 text-center text-xs text-bark/80 mb-10 max-w-3xl mx-auto">
+        <p class="font-semibold text-pine mb-1">Atenção: Atendimento Emergencial e Prevenção ao Suicídio</p>
+        <p>
+          Este site destina-se a agendamentos de psicoterapia eletiva. Em situações de sofrimento agudo, crise emocional severa ou risco de vida imediato, entre em contato gratuitamente com o <strong>Centro de Valorização da Vida (CVV) ligando 188</strong> ou procure a UPA/Pronto Atendimento mais próximo.
+        </p>
+      </div>
+
+      <!-- Footer Columns -->
+      <div class="flex flex-col md:flex-row items-center justify-between gap-6 pb-8 border-b border-sand-border/60 text-center md:text-left">
+        <div>
+          <p class="font-serif text-lg font-bold text-charcoal tracking-wide">Kesley Lilian da Silva Faria de Souza</p>
+          <p class="text-xs text-bark/70 mt-0.5">Psicóloga Clínica & Especialista em TCC • CRP 04/78779</p>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-center gap-6 text-xs text-bark/80 font-medium">
+          <a href="#" class="hover:text-pine transition-colors">Início</a>
+          <a href="#o-que-e-tcc" class="hover:text-pine transition-colors">Como Funciona a TCC</a>
+          <a href="#fases-jornada" class="hover:text-pine transition-colors">Fases da Jornada</a>
+          <a href="#duvidas-faq" class="hover:text-pine transition-colors">Reembolso & FAQ</a>
+          <a href="/landing/agendamento.html" class="hover:text-pine transition-colors font-semibold text-pine">Triagem Online</a>
+        </div>
+      </div>
+
+      <!-- Copyright -->
+      <div class="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-bark/60 text-center sm:text-left">
+        <p>© 2025 Kesley Lilian Psicologia Clínica. Todos os direitos reservados.</p>
+        <p>Ambiente confidencial em estrito acordo com as resoluções do Conselho Federal de Psicologia.</p>
+      </div>
+
+    </div>
+  </footer>
+
+</body>
+</html>

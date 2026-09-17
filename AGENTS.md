@@ -8,3 +8,9 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+<!-- AUTO-SYNC:BEGIN -->
+## Sincronização com GitHub (git-sync)
+- Sempre que alterações funcionais de código forem concluídas com sucesso, realize o commit semântico e envie (`git push`) para a branch remota no GitHub.
+- Mantenha o projeto sempre salvo e protegido contra qualquer perda de dados.
+<!-- AUTO-SYNC:END -->
