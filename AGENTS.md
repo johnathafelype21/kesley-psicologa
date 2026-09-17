@@ -11,6 +11,6 @@
 
 <!-- AUTO-SYNC:BEGIN -->
 ## Sincronização com GitHub (git-sync)
-- Sempre que alterações funcionais de código forem concluídas com sucesso, realize o commit semântico e envie (`git push`) para a branch remota no GitHub.
-- Mantenha o projeto sempre salvo e protegido contra qualquer perda de dados.
+- Execute o commit semântico e o envio (`git push`) para a branch remota no GitHub **apenas quando o usuário solicitar explicitamente** (ex: "manda pro git", "sincronizar", "atualizar github", "salvar no repositório").
+- Mantenha o projeto sempre estável e siga os padrões semânticos de commit.
 <!-- AUTO-SYNC:END -->

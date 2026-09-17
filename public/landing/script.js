@@ -315,6 +315,59 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  // Mobile Drawer Toggle Logic
+  const mobileMenuToggle = document.getElementById("mobileMenuToggle");
+  const mobileNavDrawer = document.getElementById("mobileNavDrawer");
+  const mobileDrawerBackdrop = document.getElementById("mobileDrawerBackdrop");
+  const mobileDrawerClose = document.getElementById("mobileDrawerClose");
+  const drawerLinks = document.querySelectorAll(".drawer-link");
+
+  function openMobileDrawer() {
+    if (!mobileNavDrawer || !mobileDrawerBackdrop) return;
+    mobileNavDrawer.classList.add("is-open");
+    mobileDrawerBackdrop.classList.add("is-open");
+    mobileNavDrawer.setAttribute("aria-hidden", "false");
+    mobileMenuToggle?.setAttribute("aria-expanded", "true");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeMobileDrawer() {
+    if (!mobileNavDrawer || !mobileDrawerBackdrop) return;
+    mobileNavDrawer.classList.remove("is-open");
+    mobileDrawerBackdrop.classList.remove("is-open");
+    mobileNavDrawer.setAttribute("aria-hidden", "true");
+    mobileMenuToggle?.setAttribute("aria-expanded", "false");
+    document.body.style.overflow = "";
+  }
+
+  mobileMenuToggle?.addEventListener("click", openMobileDrawer);
+  mobileDrawerClose?.addEventListener("click", closeMobileDrawer);
+  mobileDrawerBackdrop?.addEventListener("click", closeMobileDrawer);
+
+  drawerLinks.forEach((link) => {
+    link.addEventListener("click", (e) => {
+      const href = link.getAttribute("href") || "";
+      const navTarget = link.dataset.drawerNav;
+      closeMobileDrawer();
+
+      if (href.startsWith("#") || href.includes("index.html#")) {
+        const hash = href.split("#")[1];
+        if (hash) {
+          e.preventDefault();
+          if (hash === "step-1" || hash === "inicio") {
+            window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
+          } else {
+            const targetEl = document.getElementById(hash);
+            if (targetEl) {
+              const offset = targetEl.offsetTop - 70;
+              window.scrollTo({ top: offset, behavior: reduceMotion ? "auto" : "smooth" });
+            }
+          }
+        }
+      }
+    });
+  });
+
   // Event Listeners
   window.addEventListener("scroll", onScroll, { passive: true });
   window.addEventListener("resize", () => {
