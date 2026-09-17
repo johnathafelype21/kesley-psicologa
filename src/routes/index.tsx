@@ -4,20 +4,22 @@ import { useEffect } from "react";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Kesley | Psicologia e Saude Emocional" },
+      { title: "Kesley Lilian | Psicologia e Saúde Emocional" },
       {
         name: "description",
         content:
-          "Um espaco de acolhimento, escuta e cuidado para transformar a sua relacao com as emocoes.",
+          "Um espaço de acolhimento, escuta e cuidado para transformar a sua relação com as emoções.",
       },
-      { property: "og:title", content: "Kesley | Psicologia e Saude Emocional" },
+      { property: "og:title", content: "Kesley Lilian | Psicologia e Saúde Emocional" },
       {
         property: "og:description",
         content:
-          "Um espaco de acolhimento, escuta e cuidado para transformar a sua relacao com as emocoes.",
+          "Um espaço de acolhimento, escuta e cuidado para transformar a sua relação com as emoções.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:image", content: "/og-image.jpg" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: "/og-image.jpg" },
     ],
   }),
   component: Index,
