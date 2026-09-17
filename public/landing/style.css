@@ -832,3 +832,7 @@ details[open] summary svg.chevron-icon {
   transform: rotate(180deg);
 }
 
+#lovable-badge {
+  display: none !important;
+}
+
