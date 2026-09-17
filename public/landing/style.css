@@ -981,9 +981,17 @@ button:focus-visible {
     display: none !important;
   }
 
-  /* Oculta botão flutuante em favor da App Dock inferior */
-  [data-purpose="floating-whatsapp"] {
-    display: none !important;
+  /* Botão Flutuante do WhatsApp no Mobile - Posicionado elegantemente acima da barra de navegação/dock */
+  .floating-whatsapp-wrapper {
+    position: fixed;
+    bottom: calc(74px + env(safe-area-inset-bottom, 0px));
+    right: 16px;
+    z-index: 100;
+  }
+  .floating-whatsapp-btn {
+    width: 50px;
+    height: 50px;
+    box-shadow: 0 6px 20px rgba(37, 211, 102, 0.42), 0 2px 6px rgba(0, 0, 0, 0.15);
   }
 
   /* Exibe a Native Mobile App Dock */
@@ -1153,5 +1161,75 @@ details[open] summary svg.chevron-icon {
 
 #lovable-badge {
   display: none !important;
+}
+
+/* Botão Flutuante WhatsApp - Ícone Circular Puro e Elegante */
+.floating-whatsapp-wrapper {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 100;
+}
+
+.floating-whatsapp-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background-color: #25D366;
+  color: #FFFFFF;
+  box-shadow: 0 8px 24px rgba(37, 211, 102, 0.4), 0 2px 6px rgba(0, 0, 0, 0.12);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease, background-color 0.2s ease;
+  text-decoration: none;
+}
+
+.floating-whatsapp-btn:hover {
+  background-color: #20ba59;
+  transform: scale(1.1) translateY(-2px);
+  box-shadow: 0 12px 28px rgba(37, 211, 102, 0.5), 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.floating-whatsapp-btn:active {
+  transform: scale(0.94);
+}
+
+.floating-whatsapp-pulse {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background-color: #25D366;
+  opacity: 0.6;
+  animation: whatsapp-pulse-ring 2.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+  pointer-events: none;
+}
+
+@keyframes whatsapp-pulse-ring {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .floating-whatsapp-wrapper {
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px)) !important;
+    right: 16px !important;
+  }
+  .floating-whatsapp-btn {
+    width: 52px !important;
+    height: 52px !important;
+    box-shadow: 0 6px 20px rgba(37, 211, 102, 0.45), 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+  }
 }
 
