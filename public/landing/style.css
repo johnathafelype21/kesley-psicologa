@@ -445,10 +445,7 @@ body {
   line-height: 1.4;
 }
 
-/* Native Mobile App Dock */
-.mobile-app-dock {
-  display: none;
-}
+
 
 .nav-link {
   text-decoration: none;
@@ -981,10 +978,10 @@ button:focus-visible {
     display: none !important;
   }
 
-  /* Botão Flutuante do WhatsApp no Mobile - Posicionado elegantemente acima da barra de navegação/dock */
+  /* Botão Flutuante do WhatsApp no Mobile */
   .floating-whatsapp-wrapper {
     position: fixed;
-    bottom: calc(74px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
     right: 16px;
     z-index: 100;
   }
@@ -992,57 +989,6 @@ button:focus-visible {
     width: 50px;
     height: 50px;
     box-shadow: 0 6px 20px rgba(37, 211, 102, 0.42), 0 2px 6px rgba(0, 0, 0, 0.15);
-  }
-
-  /* Exibe a Native Mobile App Dock */
-  .mobile-app-dock {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 90;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    padding-bottom: max(10px, env(safe-area-inset-bottom));
-    background: rgba(250, 248, 245, 0.95);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border-top: 1px solid rgba(215, 199, 183, 0.65);
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
-  }
-
-  .dock-btn {
-    flex: 1;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 7px;
-    padding: 11px 14px;
-    border-radius: 999px;
-    font-size: 12.5px;
-    font-weight: 600;
-    text-decoration: none;
-    transition: transform 0.15s ease;
-  }
-
-  .dock-btn:active {
-    transform: scale(0.97);
-  }
-
-  .dock-btn--primary {
-    flex: 1.35;
-    background-color: var(--color-accent);
-    color: #FAF8F5;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  }
-
-  .dock-btn--whatsapp {
-    flex: 1;
-    background-color: #25D366;
-    color: #FFFFFF;
-    box-shadow: 0 2px 8px rgba(37, 211, 102, 0.28);
   }
 
   .word {
